@@ -1,5 +1,5 @@
 import setuptools
-from distutils.version import StrictVersion
+from packaging.version import Version, InvalidVersion
 from importlib import import_module
 
 
@@ -87,17 +87,20 @@ othererror_template = """
 for extra, (module_name, min_version, install_method) in extras.items():
     try:
         module = import_module(module_name.lower())
-        if StrictVersion(module.__version__) < StrictVersion(min_version):
+        try:
+            if Version(module.__version__) < Version(min_version):
+                print(
+                    version_template.format(
+                        module_name, min_version, extra, install_method
+                    )
+                )
+        except InvalidVersion:
             print(
-                version_template.format(module_name, min_version, extra, install_method)
+                valueerror_template.format(
+                    module_name, module.__version__, min_version, extra
+                )
             )
     except ImportError:
         print(missing_template.format(module_name, extra, install_method))
-    except ValueError:
-        print(
-            valueerror_template.format(
-                module_name, module.__version__, min_version, extra
-            )
-        )
-    except:
+    except Exception:
         print(othererror_template.format(module_name))
