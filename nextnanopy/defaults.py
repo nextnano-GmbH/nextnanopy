@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import warnings
 from nextnanopy.utils.config import Config
 
 products = [
@@ -189,13 +190,19 @@ class NNConfig(Config):
             fullpath = self.default_fullpath
         super().__init__(fullpath, validators)
         if not os.path.isfile(fullpath):
-            self.to_default()
-            self.save()
+            self.reset()
         elif not self._complete:
             # TODO add tests for these behaviour
             # ensures smooth transition to additional product: NEGF++
             self.update_with_defaults()
             self.save()
+
+        unsupported_products = self.get_unsupported_products()
+        if unsupported_products:
+            warnings.warn(
+                f"Unsupported products in config file: {unsupported_products} will be ignored. To not see this message, please remove unsupported products from the config file: {self.fullpath}"
+                "Note: nextnano.NEGF++ was renamed to nextnano.NEGF, nextnano.NEGF was renamed to nextnano.NEGF_classic. Please check the documentation for more details.",
+            )
 
     def to_default(self):
         for section in self.defaults.keys():
@@ -217,6 +224,13 @@ class NNConfig(Config):
             if section not in self.sections:
                 return False
         return True
+
+    def get_unsupported_products(self):
+        unsupported_products = []
+        for section in self.sections:
+            if section not in self.defaults.keys():
+                unsupported_products.append(section)
+        return unsupported_products
 
     def update_with_defaults(self):
         for section in self.defaults.keys():

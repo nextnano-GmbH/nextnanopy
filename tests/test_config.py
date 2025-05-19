@@ -2,6 +2,7 @@ import os
 from nextnanopy.defaults import NNConfig
 import unittest
 import platform
+import warnings
 
 system = platform.system()
 
@@ -204,6 +205,17 @@ class Test_NNConfig(unittest.TestCase):
         self.assertEqual(config.fullpath, fullpath_new)
         if os.path.isfile(config.fullpath):
             os.remove(config.fullpath)
+
+    def test_get_unsupported_products(self):
+        filepath = os.path.join("tests", "configs", ".nnconfig_unsupported")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            config = NNConfig(filepath)
+        unsupported_products = set(config.get_unsupported_products())
+        self.assertEqual(
+            unsupported_products,
+            {"nextnano.NEGF++", "nextnano_nonexistent"},
+        )
 
 
 if __name__ == "__main__":
