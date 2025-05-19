@@ -6,7 +6,7 @@ products = [
     "nextnano++",
     "nextnano3",
     "nextnano.NEGF",
-    "nextnano.NEGF++",
+    "nextnano.NEGF_classic",
     "nextnano.MSB",
     "nextnanoevo",
 ]
@@ -25,10 +25,10 @@ def get_InputFile(product):
         from nextnanopy.nnp.inputs import InputFile
     elif product == "nextnano3":
         from nextnanopy.nn3.inputs import InputFile
+    elif product == "nextnano.NEGF_classic":
+        from nextnanopy.negf.inputs_classic import InputFile
     elif product == "nextnano.NEGF":
         from nextnanopy.negf.inputs import InputFile
-    elif product == "nextnano.NEGF++":
-        from nextnanopy.negf.inputspp import InputFile
     elif product == "nextnano.MSB":
         from nextnanopy.msb.inputs import InputFile
     elif product == "nextnanoevo":
@@ -45,7 +45,7 @@ def get_DataFile(product):
         from nextnanopy.nn3.outputs import DataFile
     elif product == "nextnano++":
         from nextnanopy.nnp.outputs import DataFile
-    elif product == "nextnano.NEGF" or product == "nextnano.NEGF++":
+    elif product == "nextnano.NEGF_classic" or product == "nextnano.NEGF":
         from nextnanopy.negf.outputs import DataFile
     elif product == "nextnano.MSB":
         from nextnanopy.negf.outputs import DataFile
@@ -61,10 +61,10 @@ def get_command(product):
         from nextnanopy.nnp.defaults import command_nnp as command
     elif product == "nextnano3":
         from nextnanopy.nn3.defaults import command_nn3 as command
+    elif product == "nextnano.NEGF_classic":
+        from nextnanopy.negf.defaults import command_negf_classic as command
     elif product == "nextnano.NEGF":
         from nextnanopy.negf.defaults import command_negf as command
-    elif product == "nextnano.NEGF++":
-        from nextnanopy.negf.defaults import command_negfpp as command
     elif product == "nextnano.MSB":
         from nextnanopy.msb.defaults import command_msb as command
     elif product == "nextnanoevo":
@@ -79,10 +79,10 @@ def get_fmt(product):
         from nextnanopy.nnp.defaults import fmt
     elif product == "nextnano3":
         from nextnanopy.nn3.defaults import fmt
+    elif product == "nextnano.NEGF_classic":
+        from nextnanopy.negf.defaults import fmt_classic as fmt
     elif product == "nextnano.NEGF":
         from nextnanopy.negf.defaults import fmt
-    elif product == "nextnano.NEGF++":
-        from nextnanopy.negf.defaults import fmtpp
     elif product == "nextnano.MSB":
         from nextnanopy.msb.defaults import fmt
     elif product == "nextnanoevo":
@@ -95,17 +95,20 @@ def get_fmt(product):
 def input_file_type(fullpath):
     from nextnanopy.nnp.defaults import is_nnp_input_file
     from nextnanopy.nn3.defaults import is_nn3_input_file
-    from nextnanopy.negf.defaults import is_negf_input_file, is_negfpp_input_file
+    from nextnanopy.negf.defaults import (
+        is_negf_classic_input_file,
+        is_negf_input_file,
+    )
     from nextnanopy.msb.defaults import is_msb_input_file
 
     if is_nn3_input_file(fullpath):
         return "nextnano3"
     elif is_nnp_input_file(fullpath):
         return "nextnano++"
+    elif is_negf_classic_input_file(fullpath):
+        return "nextnano.NEGF_classic"
     elif is_negf_input_file(fullpath):
         return "nextnano.NEGF"
-    elif is_negfpp_input_file(fullpath):
-        return "nextnano.NEGF++"
     elif is_msb_input_file(fullpath):
         return "nextnano.MSB"
     else:
@@ -115,17 +118,20 @@ def input_file_type(fullpath):
 def input_text_type(text):
     from nextnanopy.nnp.defaults import is_nnp_input_text
     from nextnanopy.nn3.defaults import is_nn3_input_text
-    from nextnanopy.negf.defaults import is_negf_input_text, is_negfpp_input_text
+    from nextnanopy.negf.defaults import (
+        is_negf_classic_input_text,
+        is_negf_input_text,
+    )
     from nextnanopy.msb.defaults import is_msb_input_text
 
     if is_nn3_input_text(text):
         return "nextnano3"
     elif is_nnp_input_text(text):
         return "nextnano++"
+    elif is_negf_classic_input_text(text):
+        return "nextnano.NEGF_classic"
     elif is_negf_input_text(text):
         return "nextnano.NEGF"
-    elif is_negfpp_input_text(text):
-        return "nextnano.NEGF++"
     elif is_msb_input_text(text):
         return "nextnano.MSB"
     else:
@@ -147,7 +153,7 @@ def _get_config_validator(product):
         from nextnanopy.nnp.defaults import config_validator
     elif product == "nextnano3":
         from nextnanopy.nn3.defaults import config_validator
-    elif product == "nextnano.NEGF" or product == "nextnano.NEGF++":
+    elif product == "nextnano.NEGF_classic" or product == "nextnano.NEGF":
         from nextnanopy.negf.defaults import config_validator
     elif product == "nextnano.MSB":
         from nextnanopy.msb.defaults import config_validator
@@ -163,7 +169,7 @@ def _get_config_default(product):
         from nextnanopy.nnp.defaults import config_default
     elif product == "nextnano3":
         from nextnanopy.nn3.defaults import config_default
-    elif product == "nextnano.NEGF" or product == "nextnano.NEGF++":
+    elif product == "nextnano.NEGF_classic" or product == "nextnano.NEGF":
         from nextnanopy.negf.defaults import config_default
     elif product == "nextnano.MSB":
         from nextnanopy.msb.defaults import config_default
