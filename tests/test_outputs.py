@@ -1010,10 +1010,9 @@ class TestDataFolder(unittest.TestCase):
         datafolder = outputs.DataFolder(tests_folder)
 
         tree_list = datafolder.make_tree()
-
         self.assertEqual(tree_list[1], "    configs/")
         self.assertEqual(tree_list[2], "        .nnconfig")
-        self.assertEqual(tree_list[4], "        nextnano++/")
+        self.assertEqual(tree_list[5], "        nextnano++/")
 
 
 if __name__ == "__main__":
