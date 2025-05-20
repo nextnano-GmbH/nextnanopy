@@ -1,0 +1,58 @@
+[nextnano_nonexistent]
+exe = test
+license = 
+database = 
+outputdirectory = 
+threads = 0
+debuglevel = 0
+cancel = -1
+softkill = -1
+
+[nextnano++]
+exe = 
+license = 
+database = 
+outputdirectory = 
+threads = 0
+
+[nextnano.NEGF++]
+exe = 
+license = 
+database = 
+outputdirectory = 
+threads = 0
+
+[nextnano3]
+exe = 
+license = 
+database = 
+threads = 0
+outputdirectory = 
+debuglevel = 0
+cancel = -1
+softkill = -1
+
+[nextnano.NEGF]
+exe = 
+license = 
+database = 
+outputdirectory = 
+threads = 0
+
+[nextnano.NEGF_classic]
+exe = 
+license = 
+database = 
+outputdirectory = 
+threads = 0
+
+[nextnano.MSB]
+exe = 
+license = 
+database = 
+outputdirectory = 
+debug = 0
+
+[nextnanoevo]
+license = 
+
