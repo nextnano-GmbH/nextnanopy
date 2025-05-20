@@ -42,17 +42,17 @@ defined in the file:
 
    $my_var = 3    # in nextnano++
    %my_var = 3    ! in nextnano3
-   <Name Comment="in nextnano.NEGF">$my_var</Name>
+   $my_var = 3    # in nextnano.NEGF
 
 What information does it contain?
 ---------------------------------
 
 ``my_input`` has the following relevant attributes:
 
--  fullpath (str): path to the input file including the name
--  text (str): return raw text
--  variables (list): list of InputVariable objects
--  config: nextnano configuration (see Example 0)
+- fullpath (str): path to the input file including the name
+- text (str): return raw text
+- variables (list): list of InputVariable objects
+- config: nextnano configuration (see Example 0)
 
 .. code:: ipython3
 
@@ -222,12 +222,12 @@ The input variables are stored in ``my_input.variables`` as a list of
 
 These objects have the following attributes:
 
--  name (str)
--  value (undefined)
--  unit (str, optional)
--  comment (str, optional)
--  metadata (dict, optional)
--  text (str): raw text in the input file for a given variable
+- name (str)
+- value (undefined)
+- unit (str, optional)
+- comment (str, optional)
+- metadata (dict, optional)
+- text (str): raw text in the input file for a given variable
 
 .. code:: ipython3
 
@@ -257,7 +257,7 @@ There are several methods to do so:
 
    my_input.get_variable(name) # method 1 (recommended)
    my_input.variables[name] # method 2 (recommended)
-   my_input[name] # method 3 (recommended)
+   my_input[name] # method 3
    my_input.variables[index] # method 4
 
 Let’s have a quick look of the variables in this file
@@ -413,6 +413,28 @@ stored in ``my_input.config``. As explained in Example 0, it will
 automatically detect the nextnano product (nextnano++, nextnano3,
 nextnano.NEGF or nextnano.MSB) and will load the corresponding
 configuration parameters prior to the execution.
+
+To suppress the simulation log in the Python console, use
+
+.. code:: python
+
+   my_input.execute(show_log=False)
+
+(Default is ``True``). Note that the log file is always saved in the
+output folder regardless of this option.
+
+From 2022-03-22, a new option
+
+.. code:: python
+
+   my_input.execute(convergenceCheck=True)
+
+is available (default is ``False``). If ``True``, nextnanopy scans the
+log file of the simulation performed and check whether the solution has
+converged. If it did not converge, nextnanopy warns you and ask if you
+want to proceed with postprocessing. Note that non-converged solutions
+are not reliable and further calculation and/or visualization from them
+do not make much sense.
 
 You can get help for these options from Command prompt:
 
