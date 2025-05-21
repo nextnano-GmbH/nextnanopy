@@ -56,13 +56,13 @@ def detect_software(folder_path, filename):
                 FileExtension = '.in'
                 break
             elif '<nextnano.NEGF' in line:
-                software = 'nextnano.NEGF'
-                software_short = '_nnNEGF'
+                software = 'nextnano.NEGF_classic'
+                software_short = '_nnNEGF_classic'
                 FileExtension = '.xml'
                 break            
             elif 'nextnano.NEGF{' in line:
-                software = 'nextnano.NEGF++'
-                software_short = '_nnNEGFpp'
+                software = 'nextnano.NEGF'
+                software_short = '_nnNEGF'
                 FileExtension = '.negf'
                 break
             elif '<nextnano.MSB' in line:

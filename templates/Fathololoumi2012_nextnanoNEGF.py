@@ -56,15 +56,15 @@ def detect_software(folder_path, filename):
                 FileExtension = '.in'
                 break
             elif '<nextnano.NEGF' in line:
+                software = 'nextnano.NEGF_classic'
+                software_short = '_nnNEGF_classic'
+                FileExtension = '.xml'
+                break            
+            elif 'nextnano.NEGF{' in line:
                 software = 'nextnano.NEGF'
                 software_short = '_nnNEGF'
-                FileExtension = '.xml'
-                break    
-            elif 'nextnano.NEGF{' in line:
-                software = 'nextnano.NEGF++'
-                software_short = '_nnNEGFpp'
                 FileExtension = '.negf'
-                break        
+                break
             elif '<nextnano.MSB' in line:
                 software = 'nextnano.MSB'
                 software_short = '_nnMSB'
@@ -137,7 +137,7 @@ if(plotL):
       print("nextnano++ not implemented!")
   elif(software=="nextnano3"):
       print("nextnano3 not implemented!")
-  elif(software=="nextnano.NEGF"):
+  elif(software=="nextnano.NEGF_classic"):
 
       folder_results = filename_no_extension
       print("output folder_results:")
@@ -208,7 +208,7 @@ if(plotL):
       file_LDOS = ''
       file_Density = ''
       file_Current = ''
-  elif(software=="nextnano.NEGF"):
+  elif(software=="nextnano.NEGF_classic"):
       subfolder = '2D_plots'
       file_LDOS = 'DOS_energy_resolved'+extension2Dfile
       file_Density = 'CarrierDensity_energy_resolved'+extension2Dfile

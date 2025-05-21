@@ -16,8 +16,7 @@ path_nextnano_output = r"C:\Users\homer.simpson\Documents\nextnano\Output"
 #++++++++++++++++++++++++++++++++++++++++++++++++++
 # Specify your nextnano installation folder
 #++++++++++++++++++++++++++++++++++++++++++++++++++
-path_nextnano        = r"C:\Program Files\nextnano\2021_07_08"           # nextnano++, nextnano3 and nextnano.MSB software            
-path_nextnano_NEGF   = r"D:\nextnano\nextnanoNEGF_2020_11_16"            # nextnano.NEGF software
+path_nextnano        = r"C:\Program Files\nextnano\2025_05_09"           # nextnano++, nextnano3 and nextnano.MSB software            
 
 
 # NO NEED TO CHANGE THE FOLLOWING -----------------------------
@@ -36,25 +35,25 @@ nn.config.set('nextnano.MSB' , 'outputdirectory', path_nextnano_output)
 #---------------------------
 nn.config.set('nextnano++'   , 'license', os.path.join(path_license, r'License_nnp.lic'))
 nn.config.set('nextnano3'    , 'license', os.path.join(path_license, r'License_nnp.lic'))
-nn.config.set('nextnano.NEGF', 'license', os.path.join(path_license, r'License_nnQCL.lic'))
+nn.config.set('nextnano.NEGF', 'license', os.path.join(path_license, r'License_nnNEGF.lic'))
 
 #----------------------------------------------------------
 # Location of nextnano++ files:    executable and database
 #----------------------------------------------------------
-nn.config.set('nextnano++', 'exe'     , os.path.join(path_nextnano, r'nextnano++\bin 64bit\nextnano++_Intel_64bit.exe'))
-nn.config.set('nextnano++', 'database', os.path.join(path_nextnano, r'nextnano++\Syntax\database_nnp.in'))
+nn.config.set('nextnano++', 'exe'     , os.path.join(path_nextnano, r'nextnano++\bin\nextnano++_Intel_64bit.exe'))
+nn.config.set('nextnano++', 'database', os.path.join(path_nextnano, r'nextnano++\database\database_nnp.in'))
 
 #----------------------------------------------------------
 # Location of nextnano3 files:     executable and database
 #----------------------------------------------------------
-nn.config.set('nextnano3', 'exe'     , os.path.join(path_nextnano, r'nextnano3\Intel 64bit\nextnano3_Intel_64bit.exe'))
-nn.config.set('nextnano3', 'database', os.path.join(path_nextnano, r'nextnano3\Syntax\database_nn3.in'))
+nn.config.set('nextnano3', 'exe'     , os.path.join(path_nextnano, r'nextnano3\bin\nextnano3_Intel_ifx.exe'))
+nn.config.set('nextnano3', 'database', os.path.join(path_nextnano, r'nextnano3\database\database_nn3.in'))
 
 #----------------------------------------------------------
 # Location of nextnano.NEGF files: executable and database
 #----------------------------------------------------------
-nn.config.set('nextnano.NEGF', 'exe'     , os.path.join(path_nextnano_NEGF, r'nextnano.NEGF\nextnano.NEGF.exe'))
-nn.config.set('nextnano.NEGF', 'database', os.path.join(path_nextnano_NEGF, r'nextnano.NEGF\Material_Database.xml'))
+nn.config.set('nextnano.NEGF', 'exe'     , os.path.join(path_nextnano, r'nextnano.NEGF\bin\nextnano.NEGF_win.exe'))
+nn.config.set('nextnano.NEGF', 'database', os.path.join(path_nextnano, r'nextnano.NEGF\database\Material_Database.in'))
 
 #----------------------------------------------------------
 # Location of nextnano.MSB files: executable and database
