@@ -8,6 +8,7 @@ from nextnanopy.nnp.defaults import (
 )
 from nextnanopy.utils.datasets import Variable, Coord
 from nextnanopy.utils.formatting import best_str_to_name_unit
+from functools import partial
 
 
 class DataFile(DataFileTemplate):
@@ -38,7 +39,7 @@ class DataFile(DataFileTemplate):
         elif self.filename_only == "total_charges":
             loader = TotalCharges
         else:
-            raise NotImplementedError(f"Datafile {self.filename_only}.txt is not valid")
+            loader = partial(Dat, FirstVarIsCoordFlag=False)
         return loader
 
 

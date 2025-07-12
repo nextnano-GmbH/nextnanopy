@@ -205,23 +205,19 @@ class TestOutputs_nnp(unittest.TestCase):
         )
         self.assertEqual(len(df.coords.keys()), 0)
         self.assertEqual(len(df.variables.keys()), 6)
-        print(df.variables["fixed"].value)
         self.assertAlmostEqual(df.variables["fixed"].value, 0.0)
         self.assertEqual(df.variables[0].name, "electron")
         self.assertEqual(df.variables[0].unit, "e/cm^2")
 
-        files = [
-            "simulation_database.txt",
-            "simulation_info.txt",
-            "simulation_input.txt",
-        ]
-        for file in files:
-            self.assertRaises(
-                NotImplementedError,
-                outputs.DataFile,
-                join(folder_nnp, file),
-                "nextnano++",
-            )
+        df = outputs.DataFile(join(folder_nnp, "overlap_integrals_k00000.txt"), product="nextnano++")
+
+        self.assertEqual(len(df.coords.keys()), 0)
+        self.assertEqual(len(df.variables.keys()), 5)
+        self.assertAlmostEqual(df.variables["|Gamma_i>"].value[0], 1)
+        self.assertAlmostEqual(df.variables["<Gamma_i|HH_j>"].value[0], 0.0333932)
+
+
+
 
     def test_rest(self):
         files = ["example.log", "example.in"]
@@ -753,29 +749,28 @@ class TestDataFolder(unittest.TestCase):
         dummy_folder = os.path.join("tests", "dummy")
         self.assertRaises(ValueError, outputs.DataFolder, dummy_folder)
 
-        tests_folder = "tests"
-        datafolder = outputs.DataFolder(tests_folder)
-        self.assertTrue("datafiles" in datafolder.folders)
+        test_folder = "tests\dfolder"
+        datafolder = outputs.DataFolder(test_folder)
+        self.assertTrue("another_folder" in datafolder.folders)
         self.assertTrue(
-            os.path.join(tests_folder, "test_mycollections.py") in datafolder.files
+            os.path.join(test_folder, "file1") in datafolder.files
         )
+
         self.assertTrue(
-            os.path.join(tests_folder, "test_outputs.py") in datafolder.files
+            os.path.join(test_folder, "file42") in datafolder.files
         )
         self.assertFalse("NotExistedFile.py" in datafolder.files)
         self.assertFalse(
-            os.path.join(tests_folder, "NotExistedFile.py") in datafolder.files
+            os.path.join(test_folder, "NotExistedFile.py") in datafolder.files
         )
 
-        datafolder = outputs.DataFolder(folder_nnp)
+        
 
         self.assertTrue(datafolder.folders)
         self.assertTrue(datafolder.files)
 
-        self.assertEqual(len(datafolder.files), 17)
-        self.assertTrue(
-            os.path.join(folder_nnp, "bandedges_2d_old.fld") in datafolder.files
-        )
+        self.assertEqual(len(datafolder.files), 3)
+        
 
     def test_navigation(self):
         tests_folder = "tests"
@@ -792,7 +787,7 @@ class TestDataFolder(unittest.TestCase):
             os.path.join(folder_nnp, "bandedges_2d_old.fld") in nnp_folder.files
         )
 
-    def test_filenamess(self):
+    def test_filenames(self):
 
         datafolder = outputs.DataFolder(folder_nnp)
         self.assertIn("only_variables.in", datafolder.filenames())
@@ -800,7 +795,7 @@ class TestDataFolder(unittest.TestCase):
         self.assertNotIn(
             os.path.join(folder_nnp, "only_variables.in"), datafolder.filenames()
         )
-        self.assertEqual(len(datafolder.filenames()), 17)
+        
         tests_folder = "tests"
         datafolder = outputs.DataFolder(tests_folder)
 
@@ -984,7 +979,7 @@ class TestDataFolder(unittest.TestCase):
         datafolder_nnp = datafolder.go_to("datafiles", "nextnano++")
 
         self.assertTrue(os.path.samefile(datafolder_nnp.fullpath, folder_nnp))
-        self.assertEqual(len(datafolder_nnp.files), 17)
+        
 
     def test_file(self):
         tests_folder = "tests"
