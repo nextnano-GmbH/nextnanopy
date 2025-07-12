@@ -39,6 +39,10 @@ Do you want to help nextnanopy? Please send an email to [python@nextnano.com](ma
 
 ## History of changes
 
+### Version 1.0.1 (Jul 12th, 2025)
+
+- .txt files are read as Dat without coords (all columns are variables)
+
 ### Version 1.0.0 (Jul 11th, 2025)
 
 - support of python3.13
