@@ -749,7 +749,7 @@ class TestDataFolder(unittest.TestCase):
         dummy_folder = os.path.join("tests", "dummy")
         self.assertRaises(ValueError, outputs.DataFolder, dummy_folder)
 
-        test_folder = "tests\dfolder"
+        test_folder = r"tests\dfolder"
         datafolder = outputs.DataFolder(test_folder)
         self.assertTrue("another_folder" in datafolder.folders)
         self.assertTrue(

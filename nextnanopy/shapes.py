@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from cycler import cycler
 import gdspy
 import warnings
+from itertools import chain
+import shapely
 
 units_factor = {
     'nm': 1e-9,
@@ -21,11 +23,11 @@ def validate_unit(key):
 
 
 class GdsPolygonsRaw(object):
-    def __init__(self, fullpath, unit='nm', **kwargs):
+    def __init__(self, fullpath, unit='nm', by_spec_filter=None, cells=None):
         self.fullpath = fullpath
         self._labels = []
         self._unit = 'm'
-        self.load(**kwargs)
+        self.load(by_spec_filter=by_spec_filter, cells=cells)
         self.unit = unit
         self.added_labels = []
 
@@ -61,25 +63,56 @@ class GdsPolygonsRaw(object):
     def nb_polygons(self):
         return len(self.polygons_xy)
 
-    def load(self, **kwargs):
-        self.load_polygons_xy(**kwargs)
     @property
     def slices(self):
         warnings.warn("The GdsPolygonsRaw.slices is deprecated",DeprecationWarning)
         from nextnanopy.utils.shapes_deprecated import SlicedPolygon
         return [SlicedPolygon(pol_xy) for pol_xy in self.polygons_xy]
 
-    def load(self):
-        self.load_polygons_xy()
+    def load(self, by_spec_filter=None, cells=None):
+        self.load_polygons_xy(by_spec_filter=by_spec_filter, cells=cells)
         self.set_default_labels()
 
-    def load_polygons_xy(self, **kwargs):
+    def load_polygons_xy(self, by_spec_filter=None, cells=None):
+        if by_spec_filter is not None:
+            by_spec = True
+        else:
+            by_spec = False
+
         gds_lib = gdspy.GdsLibrary(infile=self.fullpath)
         xys = []
-        if 'by_spec' not in kwargs:
-            kwargs['by_spec'] = False
-        for cell in gds_lib.top_level():
-            pols = cell.get_polygons(kwargs['by_spec'])
+        if cells is not None:
+            list_of_cells = [gds_lib.cells[name] for name in cells if name in gds_lib.cells]
+        else:
+            list_of_cells = gds_lib.top_level()
+        for cell in list_of_cells:
+            # TODO test by_spec
+            pols = cell.get_polygons(by_spec=by_spec)
+            
+            # print(clipped.polygons)
+            # print(clipped.layers)
+            # print(clipped.datatypes)
+            # exit()
+            # print(f'Cell: {cell.name}, pols: {pols}')
+            if by_spec:
+                selected_lists = (pols.get(spec, []) for spec in by_spec_filter)
+                pols = list(chain.from_iterable(selected_lists))
+            # clip_box = gdspy.Rectangle((0, 0), (25000, 20000))
+            # clipped = gdspy.boolean(pols, clip_box, "and")
+            # pols = clipped.polygons
+            # clipped_polygons = []
+            # for pol in pols:
+            #     clipped = gdspy.boolean(pol, clip_box, "and")
+            #     if clipped is not None:
+            #         clipped_polygons.extend(clipped.polygons)
+            # print(clipped_polygons)
+            # exit()
+            # clip_box = gdspy.Rectangle((0, 0), (25000, 20000))
+            # clipped = gdspy.boolean(pols, clip_box, "and")
+            # print(clipped.polygons)
+            # print(clipped.layers)
+            # print(clipped.datatypes)
+            # exit()
             pols = [pi * gds_lib.unit for pi in pols]
             xys.extend(pols)
         self.polygons_xy = xys
@@ -152,3 +185,30 @@ class GdsPolygonsRaw(object):
         #     ax.legend(loc='upper right')
         #     self.added_labels.append(label)
         return ax
+    
+    def clip(self, clip_box: tuple):
+        """
+        Clip polygons to a given box and resets the labels to default values.
+        The clip_box is defined in the current unit of the object.
+
+        Parameters
+        ----------
+            clip_box: tuple (minx, miny, maxx, maxy)
+        """
+        minx, miny, maxx, maxy = clip_box
+        clip_box = shapely.geometry.box(minx=minx, miny=miny, maxx=maxx, maxy=maxy)
+        clipped_polygons = []
+        for pol in self.polygons_xy:
+            shapely_poly = shapely.geometry.Polygon(pol)
+            clipped = shapely_poly.intersection(clip_box)
+            if clipped.is_empty:
+                continue
+            elif isinstance(clipped, shapely.geometry.Polygon):
+                clipped_polygons.append(clipped.exterior.coords)
+            elif isinstance(clipped, shapely.geometry.MultiPolygon):
+                for p in clipped.geoms:
+                    clipped_polygons.append(p.exterior.coords)
+
+        self.polygons_xy = clipped_polygons
+        self.set_default_labels()
+
