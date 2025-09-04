@@ -12,6 +12,7 @@ extras = {
     "gdspy": ("gdspy", "1.6", "pip"),
     "matplotlib": ("matplotlib", "3.2", "conda"),
     "cycler": ("cycler", "0.10", "conda"),
+    "shapely": ("shapely", "1.7", "conda"),
 }
 extras_require = {k: ">=".join(v[0:2]) for k, v in extras.items()}
 
