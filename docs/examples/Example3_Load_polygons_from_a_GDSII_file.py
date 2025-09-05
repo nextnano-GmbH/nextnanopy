@@ -5,7 +5,7 @@
 # 
 # ## About this example: load polygons from a GDSII file
 # 
-# This example is aimed for users who are familiar with GDSII files.
+# This example is aimed at users who are familiar with GDSII files.
 # 
 # Citing from [Wikipedia](https://en.wikipedia.org/wiki/GDSII):
 # 
@@ -75,19 +75,18 @@ from nextnanopy.nnp.shapes import GdsPolygons
 my_gds = GdsPolygons(r'..\..\tests\gds\example2.gds')
 
 
-# ## Let's have a look of the polygons
+# ## Let's have a look at the polygons
 
 # In[2]:
 
 
 import matplotlib.pyplot as plt
-get_ipython().run_line_magic('matplotlib', 'notebook')
 
 print(f"Number of polygons: {my_gds.nb_polygons}")
 my_gds.show()
 
 
-# ## How to access to the vertexes coordinates
+# ## How to access the vertexes coordinates
 # 
 # This information is stored in:
 # 
@@ -95,7 +94,7 @@ my_gds.show()
 # x,y = my_gds.xy
 # ```
 # 
-# For example, the x and y for the second vertex of the first polygon is ```x[0][1]``` and ```y[0][1]```.
+# For example, the x and y for the second vertex of the first polygon are ```x[0][1]``` and ```y[0][1]```.
 
 # In[3]:
 
@@ -127,4 +126,78 @@ my_gds.show()
 #     print(shape.text)
 # ```
 
-# Please, contact python@nextnano.com for any issue with this example.
+# ## Filter the polygons on import
+# 
+# When importing the geometry it is possible to limit import to:
+# * specific cells
+# * specific layers and datatypes
+# 
+# ```python
+# my_gds = GdsPolygons(path_to_file, by_spec_filter=[(layer1, datatype1), (layer1, datatype2), (layer2, datatype1)...], cells=["cell_name1", "cell_name2"...])
+# # layer1, layer2, datatype1 and datatype2 are integers
+# ```
+# In the example below, only polygons from cell "mycell" is imported, with polygons of datatype 0 from layer 1 and 2.
+# 
+# ```python
+# my_gds = GdsPolygons(path_to_file, by_spec_filter=[(1, 0), (2, 0)], cells=["mycell"])
+# ```
+# 
+# One can also filter only by cell or only by layer-datatype.
+# 
+# **Hint:** Default datatype is 0, if no datatypes are explicitly specified in GDSII file, all objects would have datatype 0.
+# 
+
+# In[5]:
+
+
+# importing whole example 1
+my_gds = GdsPolygons(r'..\..\tests\gds\example1.gds')
+my_gds.show()
+
+
+# In[6]:
+
+
+# importing only layer 1
+my_gds = GdsPolygons(r'..\..\tests\gds\example1.gds', by_spec_filter=[(1,0)])
+my_gds.show()
+
+
+# ## Clip the polygons to rectangular box
+# 
+# After importing the polygons, one can clip them to the rectangular box.
+# 
+# ```python
+# my_gds.clip((minx, miny, maxx, maxy))
+# ```
+
+# In[7]:
+
+
+my_gds = GdsPolygons(r'..\..\tests\gds\example1.gds')
+my_gds.clip((-100, -1000, 2100, 1000))
+my_gds.show()
+
+
+# ### nextnano++ polygonal prisms at different z-ranges
+# Using the filtering and/or clipping features, it is possible create polygonal prisms from with different z-ranges with polygons from one GDSII file.
+# 
+# In the example below, polygons from layer 1 are exported as prisms at z = (0, 10),  polygons from layer 2 are exported as prisms at z = (15, 20) 
+# ```python
+# spec_filters = [(1, 0) , (2, 0)]
+# z_ranges = [(0, 10), (15, 20)]
+# result = [] # the resulting polygons will be appended here
+# for spec_filter, z_range in zip(spec_filters, z_ranges):
+#     gds = GdsPolygons(r'..\..\tests\gds\example1.gds', by_spec_filter=[spec_filter])
+#     list_of_shapes = gds.get_polygonal_prisms(zi=z_range[0], zf=z_range[1])
+#     result.extend(list_of_shapes) # add all objects (shapes) from list_of_shapes to result
+# 
+# # print the result
+# for shape in result:
+#     print(shape.text)
+# ```
+#                       
+
+# 
+# 
+# Please contact python@nextnano.com for any issues with this document.
