@@ -88,31 +88,9 @@ class GdsPolygonsRaw(object):
         for cell in list_of_cells:
             # TODO test by_spec
             pols = cell.get_polygons(by_spec=by_spec)
-            
-            # print(clipped.polygons)
-            # print(clipped.layers)
-            # print(clipped.datatypes)
-            # exit()
-            # print(f'Cell: {cell.name}, pols: {pols}')
             if by_spec:
                 selected_lists = (pols.get(spec, []) for spec in by_spec_filter)
                 pols = list(chain.from_iterable(selected_lists))
-            # clip_box = gdspy.Rectangle((0, 0), (25000, 20000))
-            # clipped = gdspy.boolean(pols, clip_box, "and")
-            # pols = clipped.polygons
-            # clipped_polygons = []
-            # for pol in pols:
-            #     clipped = gdspy.boolean(pol, clip_box, "and")
-            #     if clipped is not None:
-            #         clipped_polygons.extend(clipped.polygons)
-            # print(clipped_polygons)
-            # exit()
-            # clip_box = gdspy.Rectangle((0, 0), (25000, 20000))
-            # clipped = gdspy.boolean(pols, clip_box, "and")
-            # print(clipped.polygons)
-            # print(clipped.layers)
-            # print(clipped.datatypes)
-            # exit()
             pols = [pi * gds_lib.unit for pi in pols]
             xys.extend(pols)
         self.polygons_xy = xys
