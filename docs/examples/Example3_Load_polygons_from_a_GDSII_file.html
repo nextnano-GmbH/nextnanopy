@@ -7739,7 +7739,7 @@ conda install Shapely
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Filter-the-polygons-on-import">Filter the polygons on import<a class="anchor-link" href="#Filter-the-polygons-on-import">¶</a></h2><p>When importing the geometry it is possible to limit import to:</p>
+<h2 id="Filter-the-polygons-on-import">Filter the polygons on import<a class="anchor-link" href="#Filter-the-polygons-on-import">¶</a></h2><p>When importing the geometry it is possible to limit import from:</p>
 <ul>
 <li>specific cells</li>
 <li>specific layers and datatypes</li>
@@ -7877,11 +7877,11 @@ conda install Shapely
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="nextnano++-polygonal-prisms-at-different-z-ranges">nextnano++ polygonal prisms at different z-ranges<a class="anchor-link" href="#nextnano++-polygonal-prisms-at-different-z-ranges">¶</a></h3><p>Using the filtering and/or clipping features, it is possible create polygonal prisms from with different z-ranges with polygons from one GDSII file.</p>
+<h3 id="nextnano++-polygonal-prisms-at-different-z-ranges">nextnano++ polygonal prisms at different z-ranges<a class="anchor-link" href="#nextnano++-polygonal-prisms-at-different-z-ranges">¶</a></h3><p>Using the filtering and/or clipping features, it is possible to create polygonal prisms with different z-ranges with polygons from one GDSII file.</p>
 <p>In the example below, polygons from layer 1 are exported as prisms at z = (0, 10),  polygons from layer 2 are exported as prisms at z = (15, 20)</p>
 <div class="highlight"><pre><span></span><span class="n">spec_filters</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
 <span class="n">z_ranges</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">20</span><span class="p">)]</span>
-<span class="n">result</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># the resulting polygons will be appended here</span>
+<span class="n">result</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># the resulting prisms will be appended here</span>
 <span class="k">for</span> <span class="n">spec_filter</span><span class="p">,</span> <span class="n">z_range</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">spec_filters</span><span class="p">,</span> <span class="n">z_ranges</span><span class="p">):</span>
     <span class="n">gds</span> <span class="o">=</span> <span class="n">GdsPolygons</span><span class="p">(</span><span class="sa">r</span><span class="s1">'..\..\tests\gds\example1.gds'</span><span class="p">,</span> <span class="n">by_spec_filter</span><span class="o">=</span><span class="p">[</span><span class="n">spec_filter</span><span class="p">])</span>
     <span class="n">list_of_shapes</span> <span class="o">=</span> <span class="n">gds</span><span class="o">.</span><span class="n">get_polygonal_prisms</span><span class="p">(</span><span class="n">zi</span><span class="o">=</span><span class="n">z_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">zf</span><span class="o">=</span><span class="n">z_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>

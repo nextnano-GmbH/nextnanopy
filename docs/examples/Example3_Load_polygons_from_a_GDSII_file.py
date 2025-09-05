@@ -128,7 +128,7 @@ my_gds.show()
 
 # ## Filter the polygons on import
 # 
-# When importing the geometry it is possible to limit import to:
+# When importing the geometry it is possible to limit import from:
 # * specific cells
 # * specific layers and datatypes
 # 
@@ -180,13 +180,13 @@ my_gds.show()
 
 
 # ### nextnano++ polygonal prisms at different z-ranges
-# Using the filtering and/or clipping features, it is possible create polygonal prisms from with different z-ranges with polygons from one GDSII file.
+# Using the filtering and/or clipping features, it is possible to create polygonal prisms with different z-ranges with polygons from one GDSII file.
 # 
 # In the example below, polygons from layer 1 are exported as prisms at z = (0, 10),  polygons from layer 2 are exported as prisms at z = (15, 20) 
 # ```python
 # spec_filters = [(1, 0) , (2, 0)]
 # z_ranges = [(0, 10), (15, 20)]
-# result = [] # the resulting polygons will be appended here
+# result = [] # the resulting prisms will be appended here
 # for spec_filter, z_range in zip(spec_filters, z_ranges):
 #     gds = GdsPolygons(r'..\..\tests\gds\example1.gds', by_spec_filter=[spec_filter])
 #     list_of_shapes = gds.get_polygonal_prisms(zi=z_range[0], zf=z_range[1])
