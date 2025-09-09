@@ -1,7 +1,5 @@
 import nextnanopy as nn
-from nextnanopy.utils.misc import mkdir_if_not_exist
-import sys,os
-#import numpy as np
+import os
 import matplotlib.pyplot as plt
 
 this_dir = os.path.dirname(__file__)
@@ -10,10 +8,10 @@ FigFormat = '.jpg' # other options: .pdf, .svg, .png
 
 # Specify input file folder  (please adjust path if necessary)
 # nextnano++ examples
-input_folder = r'C:\Program Files\nextnano\2025_08_21\nextnano++\examples\transmission'
+input_folder = r'C:\Program Files\nextnano\2025_08_21\nextnano3\examples\education\lecture_on_quantum_mechanics'
 
 # specify input file name
-filename = r'transmission-double-barrier_Birner_JCEL_2009_1D_nnp.nnp'
+filename = r'Transmission_Double_Barrier_1D_nn3.nn3'
 
 # specify variable and its values
 sweep_variable = 'Barrier_Width'
@@ -39,13 +37,13 @@ fig, ax = plt.subplots(1)
 for path, combination in sweep.sweep_output_infodict.items():
     val = combination[sweep_variable]
     data_folder = nn.DataFolder(path)
-    transmission_file = data_folder.go_to("bias_00000", "CBR", "cbr", "Gamma", "transmission.dat")
-    df = nn.DataFile(transmission_file, product="nextnano++")
-    ax.plot(df.coords[0].value, df.variables[1].value, label=f"{sweep_variable}={val}")
+    transmission_file = data_folder.go_to("Results", "Transmission_cb_sg1_deg1.dat")
+    df = nn.DataFile(transmission_file, product="nextnano3")
+    ax.plot(df.coords[0].value, df.variables[0].value, label=f"{sweep_variable}={val}")
 
 
 ax.set_xlabel(f"{df.coords[0].name} ({df.coords[0].unit})", size=14)
-ax.set_ylabel(f"{df.variables[1].name} ({df.variables[1].unit})", size=14)
+ax.set_ylabel(f"{df.variables[0].name} ({df.variables[0].unit})", size=14)
 ax.set_title('Transmission', size=16)
 ax.legend()
 # optional figure formatting

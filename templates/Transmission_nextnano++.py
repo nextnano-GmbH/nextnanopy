@@ -1,5 +1,6 @@
 import nextnanopy as nn
-import os
+import sys,os
+#import numpy as np
 import matplotlib.pyplot as plt
 
 this_dir = os.path.dirname(__file__)
@@ -35,10 +36,14 @@ output_folder = input_file.folder_output
 print("Plotting the data...")
 # get the path of the file. You can use os.path.join instead as well
 data_folder = nn.DataFolder(output_folder)
-transmission_file = data_folder.go_to("bias_00000", "CBR", "transmission_cbr_Gamma.dat")
+transmission_file = data_folder.go_to("bias_00000", "CBR", "cbr", "Gamma", "transmission.dat")
 data_file = nn.DataFile(transmission_file, product="nextnano++")
 
-data_file.plot()
+# data_file.plot(y_axis_name = 'Transmission') # simple way to plot all data in one line
+plt.plot(data_file.coords[0].value, data_file.variables[1].value, label=f"{variable}={value}")
+plt.xlabel(f"{data_file.coords[0].name} ({data_file.coords[0].unit})", size=14)
+plt.ylabel(f"{data_file.variables[1].name} ({data_file.variables[1].unit})", size=14)
+plt.title('Transmission', size=16)
 plt.legend()
 plt.grid(alpha=0.3)
 plt.show()

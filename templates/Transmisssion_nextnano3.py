@@ -1,10 +1,9 @@
 import nextnanopy as nn
-import os
+import sys,os
+#import numpy as np
 import matplotlib.pyplot as plt
 
 this_dir = os.path.dirname(__file__)
-# Specify output image format
-FigFormat = '.jpg' # other options: .pdf, .svg, .png
 
 # Specify input file folder  (please adjust path if necessary)
 # nextnano++ examples
@@ -13,43 +12,38 @@ input_folder = r'C:\Program Files\nextnano\2025_08_21\nextnano3\examples\educati
 # specify input file name
 filename = r'Transmission_Double_Barrier_1D_nn3.nn3'
 
-# specify variable and its values
-sweep_variable = 'Barrier_Width'
-sweep_values = [2.0, 4.0, 10.0] 
-
-# plt.ion() # interactive mode
-print("starting nextnano...")
+# load input file
 input_path = os.path.join(input_folder, filename)
-# save a copy in this folder. Only necessary if input file is in program files folder to avoid permission denyed errors
 input_file = nn.InputFile(input_path)
-input_file.save(os.path.join(this_dir, filename), overwrite=True)
-input_path = input_file.fullpath
 
-# create a sweep to execute
-sweep = nn.Sweep(variables_to_sweep={sweep_variable: sweep_values}, fullpath=input_path)
-sweep.save_sweep(integer_only_in_name=True)
-# execute the sweep
-sweep.execute_sweep(delete_input_files=True, parallel_limit=3, show_log=False) # parallel limit is number of parallel executions, best is number of CPU cores - 1 
-# plot the results 
+# specify variable and its values
+variable = 'Barrier_Width'
+value = 4.0
+
+print("Starting nextnano...")
+input_path = os.path.join(input_folder, filename)
+input_file = nn.InputFile(input_path)
+
+# modify and save the input file in the working directory
+input_file.set_variable(variable, value=value, comment='<= PYTHON <= modified variable')
+input_file_modified_location = os.path.join(this_dir, filename)
+input_file.save(input_file_modified_location, overwrite=True)
+print("Executing nextnano3 ...")
+input_file.execute(show_log=False) # change to True if you want to see the log in the console
+# get path to output folder
+output_folder = input_file.folder_output
+
 print("Plotting the data...")
-fig, ax = plt.subplots(1)
+# get the path of the file. You can use os.path.join instead as well
+data_folder = nn.DataFolder(output_folder)
+transmission_file = data_folder.go_to("Results", "Transmission_cb_sg1_deg1.dat")
+data_file = nn.DataFile(transmission_file, product="nextnano3")
 
-for path, combination in sweep.sweep_output_infodict.items():
-    val = combination[sweep_variable]
-    data_folder = nn.DataFolder(path)
-    transmission_file = data_folder.go_to("Results", "Transmission_cb_sg1_deg1.dat")
-    df = nn.DataFile(transmission_file, product="nextnano3")
-    ax.plot(df.coords[0].value, df.variables[0].value, label=f"{sweep_variable}={val}")
-
-
-ax.set_xlabel(f"{df.coords[0].name} ({df.coords[0].unit})", size=14)
-ax.set_ylabel(f"{df.variables[0].name} ({df.variables[0].unit})", size=14)
-ax.set_title('Transmission', size=16)
-ax.legend()
-# optional figure formatting
-ax.grid(alpha=0.3)
-fig.tight_layout()
-fig.savefig(os.path.join(sweep.sweep_output_directory, f'Transmission_{sweep_variable}{FigFormat}'))
+# data_file.plot(y_axis_name = 'Transmission') # simple way to plot all data in one line
+plt.plot(data_file.coords[0].value, data_file.variables[0].value, label=f"{variable}={value}")
+plt.xlabel(f"{data_file.coords[0].name} ({data_file.coords[0].unit})", size=14)
+plt.ylabel(f"{data_file.variables[0].name} ({data_file.variables[0].unit})", size=14)
+plt.title('Transmission', size=16)
+plt.legend()
+plt.grid(alpha=0.3)
 plt.show()
-
-print('Done.')
