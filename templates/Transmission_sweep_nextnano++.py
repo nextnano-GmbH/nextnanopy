@@ -1,7 +1,5 @@
 import nextnanopy as nn
-from nextnanopy.utils.misc import mkdir_if_not_exist
-import sys,os
-#import numpy as np
+import os
 import matplotlib.pyplot as plt
 
 this_dir = os.path.dirname(__file__)
