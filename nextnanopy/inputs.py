@@ -11,6 +11,8 @@ from nextnanopy.utils.misc import savetxt, get_filename, get_folder, get_file_ex
 from nextnanopy.commands import execute as cmd_execute
 from nextnanopy import defaults
 from collections.abc import Iterable
+import tempfile
+import atexit
 
 
 _msgs = defaults.messages['load_input']
@@ -95,6 +97,7 @@ class InputFileTemplate(object):
             change the value and/or the comment of self.variable[name]
             If value or comment is None, it won't change that parameter
     """
+    _shared_temp_dir = None
 
     def __init__(self, fullpath=None, configpath=None):
         self.raw_lines = []
@@ -110,6 +113,13 @@ class InputFileTemplate(object):
         else:
             self.config = defaults.NNConfig(configpath)
         self.execute_info = {}
+
+    @classmethod
+    def _get_temp_dir(cls):
+        if cls._shared_temp_dir is None:
+            cls._shared_temp_dir = tempfile.TemporaryDirectory()
+            atexit.register(cls._shared_temp_dir.cleanup)
+        return cls._shared_temp_dir.name
 
     @property
     def text(self):
@@ -226,7 +236,7 @@ class InputFileTemplate(object):
             #raise ValueError(f'Not valid input file')
 
     @save_message
-    def save(self, fullpath=None, overwrite=False, automkdir=True):
+    def save(self, fullpath=None, overwrite=False, automkdir=True, temp=False):
         """
         Save the current information into a file.
 
@@ -241,11 +251,21 @@ class InputFileTemplate(object):
         automkdir : bool, optional
             If it is True, it will create the folder if it does not exist.
             (default is False)
+        temp: bool, optional
+            If it is True, it will save the file in a temporary location.
+            (default is False)
         """
+        if temp and fullpath is not None:
+            warnings.warn('Fullpath is specified, temp flag is ignored')
         if fullpath is None:
-            if self.fullpath is None:
+            if temp:
+                folder = self._get_temp_dir()
+                fullpath = os.path.join(folder, self.filename)
+            elif self.fullpath is None:
                 raise ValueError('Please, specify a fullpath')
-            fullpath = self.fullpath
+            else:
+                fullpath = self.fullpath
+        
         self.fullpath = savetxt(fullpath=fullpath, text=self.text, overwrite=overwrite, automkdir=automkdir)
         return self.fullpath
 

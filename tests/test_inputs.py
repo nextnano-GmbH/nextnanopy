@@ -1,7 +1,7 @@
 import unittest
 import os
 from nextnanopy.inputs import InputFile, Sweep
-
+import tempfile
 
 def delete_files(start, directory=os.getcwd(), exceptions=None):
     for fname in os.listdir(directory):
@@ -165,6 +165,21 @@ class Test_nnp(unittest.TestCase):
         file.save()
         self.assertTrue(os.path.isfile(os.path.join(folder_nnp, "only_variables_0.in")))
 
+    def test_save_temp(self):
+        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        file = InputFile(fullpath)
+        file.save(temp=True)
+        self.assertTrue(os.path.isfile(file.fullpath))
+        try:
+            self.assertTrue(os.path.isfile(file.fullpath))
+            # Check that the file is in the system temp directory
+            temp_dir = os.path.abspath(tempfile.gettempdir())
+            file_dir = os.path.abspath(os.path.dirname(file.fullpath))
+            self.assertTrue(file_dir.startswith(temp_dir))
+        finally:
+            if os.path.exists(file.fullpath):
+                os.remove(file.fullpath)
+
     def test_same_dir_saving(self):
         current_directory = os.getcwd()
         self.addCleanup(os.chdir, current_directory)
@@ -316,6 +331,21 @@ class Test_nn3(unittest.TestCase):
         os.remove(file.fullpath)
         os.rmdir(new_folder)
 
+    def test_save_temp(self):
+        fullpath = os.path.join(folder_nn3, "only_variables.in")
+        file = InputFile(fullpath)
+        file.save(temp=True)
+        self.assertTrue(os.path.isfile(file.fullpath))
+        try:
+            self.assertTrue(os.path.isfile(file.fullpath))
+            # Check that the file is in the system temp directory
+            temp_dir = os.path.abspath(tempfile.gettempdir())
+            file_dir = os.path.abspath(os.path.dirname(file.fullpath))
+            self.assertTrue(file_dir.startswith(temp_dir))
+        finally:
+            if os.path.exists(file.fullpath):
+                os.remove(file.fullpath)
+    
     def test_text(self):
         fullpath_onlyvar = os.path.join(folder_nn3, "only_variables.in")
         fullpath_example = os.path.join(folder_nn3, "example.in")
