@@ -394,7 +394,7 @@ class Test_negf_classic(unittest.TestCase):
         self.assertEqual(file.variables["variable1"].name, "variable1")
         self.assertEqual(file.variables["variable1"].value, float(0.24))
         self.assertEqual(file.variables["variable1"].comment, "Some comment")
-        self.assertEqual(file.variables["variable1"].unit, "a.u.")
+        self.assertEqual(file.variables["variable1"].unit, "")
 
         self.assertEqual(file.variables["variable2"].name, "variable2")
         self.assertEqual(file.variables["variable2"].value, int(0))

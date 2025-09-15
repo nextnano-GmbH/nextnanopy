@@ -595,7 +595,7 @@ class TestOutputs_negf(unittest.TestCase):
         self.assertEqual(df.coords["Photon Energy"].value.size, 3670)
         self.assertEqual(len(df.variables.keys()), 36)
         self.assertEqual(df.variables["Transition 2 => 3"], df.variables[0])
-        self.assertEqual(df.variables["Transition 2 => 3"].unit, "a.u.")
+        self.assertEqual(df.variables["Transition 2 => 3"].unit, "")
 
         self.assertEqual(df.metadata["ndim"], 1)
         self.assertEqual(df.metadata["dkeys"], [0])
