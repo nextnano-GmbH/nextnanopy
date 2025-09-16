@@ -1,8 +1,10 @@
 import nextnanopy as nn
 from nextnanopy.utils.misc import mkdir_if_not_exist
-import sys,os
-#import numpy as np
+import os
 import matplotlib.pyplot as plt
+
+# set to False to only have one plot with all transmissions
+plot_individual_transmissions = True
 
 this_dir = os.path.dirname(__file__)
 # Specify output image format
@@ -42,7 +44,16 @@ for path, combination in sweep.sweep_output_infodict.items():
     transmission_file = data_folder.go_to("bias_00000", "CBR", "cbr", "Gamma", "transmission.dat")
     df = nn.DataFile(transmission_file, product="nextnano++")
     ax.plot(df.coords[0].value, df.variables[1].value, label=f"{sweep_variable}={val}")
+    if plot_individual_transmissions:
+        fig2, ax2 = plt.subplots(1)
+        ax2.plot(df.coords[0].value, df.variables[1].value, label=f"{sweep_variable}={val}")
+        ax2.set_xlabel(f"{df.coords[0].name} ({df.coords[0].unit})", size=14)
+        ax2.set_ylabel(f"{df.variables[1].name} ({df.variables[1].unit})", size=14)
+        ax2.set_title(f'Transmission {sweep_variable}={val}', size=16)
+        fig2.savefig(os.path.join(path, f'Transmission_{sweep_variable}_{val}{FigFormat}'))
 
+# Bring the first figure window to the front
+plt.figure(fig.number)
 
 ax.set_xlabel(f"{df.coords[0].name} ({df.coords[0].unit})", size=14)
 ax.set_ylabel(f"{df.variables[1].name} ({df.variables[1].unit})", size=14)
