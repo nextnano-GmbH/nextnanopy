@@ -31,7 +31,7 @@ sweep.save_sweep(integer_only_in_name=True)
 # execute the sweep
 sweep.execute_sweep(delete_input_files=True, parallel_limit=3, show_log=False) # parallel limit is number of parallel executions, best is number of CPU cores - 1 
 # plot the results 
-print("Plotting the data...")
+print("Plotting transmission...")
 fig, ax = plt.subplots(1)
 
 for path, combination in sweep.sweep_output_infodict.items():
@@ -50,6 +50,34 @@ ax.legend()
 ax.grid(alpha=0.3)
 fig.tight_layout()
 fig.savefig(os.path.join(sweep.sweep_output_directory, f'Transmission_{sweep_variable}{FigFormat}'))
+
+print("Plotting local density of states...")
+
+for path, combination in sweep.sweep_output_infodict.items():
+    val = combination[sweep_variable]
+    data_folder = nn.DataFolder(path)
+    file_ldos = data_folder.go_to("Results", "LocalDOS_sg1_deg1.fld")
+    file_cb = data_folder.go_to("Results", "cb_Gamma.dat")
+    datafile_cb = nn.DataFile(file_cb, product="nextnano3")
+    datafile_ldos = nn.DataFile(file_ldos, product="nextnano3")
+
+    x=datafile_ldos.coords['x']
+    y=datafile_ldos.coords['y']
+    z=datafile_ldos.variables[0]
+
+    fig, ax = plt.subplots(1)
+    pcolor = ax.pcolormesh(x.value, y.value, z.value.T)
+    cbar = fig.colorbar(pcolor)
+    cbar.set_label(f"{z.name} ({z.unit})")
+    ax.plot(datafile_cb.coords[0].value,datafile_cb.variables[0].value, label="cb",
+            color='white', linestyle='-')
+
+    ax.set_xlabel(f"{x.name} ({x.unit})")
+    ax.set_ylabel(f"{y.name} ({y.unit})")
+    ax.set_title(f'Local density of states {sweep_variable}={val}')
+    fig.tight_layout()
+    fig.savefig(os.path.join(path, f'LDOS_{sweep_variable}_{val}{FigFormat}'))
+
 plt.show()
 
 print('Done.')
