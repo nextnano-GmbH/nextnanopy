@@ -2,6 +2,9 @@ import nextnanopy as nn
 import os
 import matplotlib.pyplot as plt
 
+# set to False to only have one plot with all transmissions
+plot_individual_transmissions = True
+
 this_dir = os.path.dirname(__file__)
 # Specify output image format
 FigFormat = '.jpg' # other options: .pdf, .svg, .png
@@ -31,25 +34,6 @@ sweep.save_sweep(integer_only_in_name=True)
 # execute the sweep
 sweep.execute_sweep(delete_input_files=True, parallel_limit=3, show_log=False) # parallel limit is number of parallel executions, best is number of CPU cores - 1 
 # plot the results 
-print("Plotting transmission...")
-fig, ax = plt.subplots(1)
-
-for path, combination in sweep.sweep_output_infodict.items():
-    val = combination[sweep_variable]
-    data_folder = nn.DataFolder(path)
-    transmission_file = data_folder.go_to("Results", "Transmission_cb_sg1_deg1.dat")
-    df = nn.DataFile(transmission_file, product="nextnano3")
-    ax.plot(df.coords[0].value, df.variables[0].value, label=f"{sweep_variable}={val}")
-
-
-ax.set_xlabel(f"{df.coords[0].name} ({df.coords[0].unit})", size=14)
-ax.set_ylabel(f"{df.variables[0].name} ({df.variables[0].unit})", size=14)
-ax.set_title('Transmission', size=16)
-ax.legend()
-# optional figure formatting
-ax.grid(alpha=0.3)
-fig.tight_layout()
-fig.savefig(os.path.join(sweep.sweep_output_directory, f'Transmission_{sweep_variable}{FigFormat}'))
 
 print("Plotting local density of states...")
 
@@ -77,6 +61,37 @@ for path, combination in sweep.sweep_output_infodict.items():
     ax.set_title(f'Local density of states {sweep_variable}={val}')
     fig.tight_layout()
     fig.savefig(os.path.join(path, f'LDOS_{sweep_variable}_{val}{FigFormat}'))
+
+print("Plotting transmission...")
+
+fig, ax = plt.subplots(1)
+
+for path, combination in sweep.sweep_output_infodict.items():
+    val = combination[sweep_variable]
+    data_folder = nn.DataFolder(path)
+    transmission_file = data_folder.go_to("Results", "Transmission_cb_sg1_deg1.dat")
+    df = nn.DataFile(transmission_file, product="nextnano3")
+    ax.plot(df.coords[0].value, df.variables[0].value, label=f"{sweep_variable}={val}")
+    if plot_individual_transmissions:
+        fig2, ax2 = plt.subplots(1)
+        ax2.plot(df.coords[0].value, df.variables[0].value, label=f"{sweep_variable}={val}")
+        ax2.set_xlabel(f"{df.coords[0].name} ({df.coords[0].unit})", size=14)
+        ax2.set_ylabel(f"{df.variables[0].name} ({df.variables[0].unit})", size=14)
+        ax2.set_title(f'Transmission {sweep_variable}={val}', size=16)
+        fig2.savefig(os.path.join(path, f'Transmission_{sweep_variable}_{val}{FigFormat}'))
+
+# Bring the first figure window to the front
+plt.figure(fig.number)
+ax.set_xlabel(f"{df.coords[0].name} ({df.coords[0].unit})", size=14)
+ax.set_ylabel(f"{df.variables[0].name} ({df.variables[0].unit})", size=14)
+ax.set_title('Transmission', size=16)
+ax.legend()
+# optional figure formatting
+ax.grid(alpha=0.3)
+fig.tight_layout()
+fig.savefig(os.path.join(sweep.sweep_output_directory, f'Transmission_{sweep_variable}{FigFormat}'))
+
+
 
 plt.show()
 
