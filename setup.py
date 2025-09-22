@@ -46,6 +46,7 @@ setuptools.setup(
     python_requires=">=3.8",
     install_requires=install_requires,
     extras_require=extras_require,
+    package_data={"nextnanopy.utils.styles": ["*.mplstyle"]},
 )
 
 # Code below adapted from QCoDeS (https://qcodes.github.io/)
