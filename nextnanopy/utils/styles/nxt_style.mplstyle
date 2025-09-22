@@ -4,6 +4,7 @@
 axes.labelsize : 14
 xtick.labelsize : 12
 ytick.labelsize : 12
+legend.fontsize : 12
 
 # Tick direction
 xtick.direction : in
@@ -16,13 +17,8 @@ grid.alpha : 0.7
 
 # Figure appearance
 figure.facecolor : white
-lines.linewidth : 2.0
+lines.linewidth : 1.5
 
 # Color cycle
-axes.prop_cycle : cycler('color', [
-    "#13ADB5",  # NXT_BLUE
-    "#FF2967",  # WILD_STRAWBERRY
-    "#FDBA42",  # GOLDEN
-    "#009B55",  # GREEN
-    "black"
-])
+# nxt_blue, wild_strawberry, golden, green, black
+axes.prop_cycle : cycler('color', ["#13ADB5", "#FF2967", "#FDBA42", "#009B55", "black"])
