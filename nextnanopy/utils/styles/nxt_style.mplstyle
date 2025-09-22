@@ -1,0 +1,28 @@
+# nxt_style.mplstyle
+# -------------------
+# Fonts
+axes.labelsize : 14
+xtick.labelsize : 12
+ytick.labelsize : 12
+
+# Tick direction
+xtick.direction : in
+ytick.direction : in
+
+# Grid
+axes.grid : True
+grid.linestyle : --
+grid.alpha : 0.7
+
+# Figure appearance
+figure.facecolor : white
+lines.linewidth : 2.0
+
+# Color cycle
+axes.prop_cycle : cycler('color', [
+    "#13ADB5",  # NXT_BLUE
+    "#FF2967",  # WILD_STRAWBERRY
+    "#FDBA42",  # GOLDEN
+    "#009B55",  # GREEN
+    "black"
+])
