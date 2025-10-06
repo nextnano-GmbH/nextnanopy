@@ -981,9 +981,9 @@ def load_values(
     if filetype == "ascii":
 
         stop = skip + size if size != None else None
-        with open(file, "r") as f:
+        with open(file, "rb") as f:
             lines = islice(f, skip, stop, 1)
-            values = [line.replace("\n", "").strip().split()[offset] for line in lines]
+            values = [line.decode("ascii").replace("\n", "").strip().split()[offset] for line in lines]
     elif filetype == "binary":
         datatypes = {"double": "d"}
         datatype_sizes = {"double": 8}

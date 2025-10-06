@@ -243,6 +243,13 @@ class TestOutputs_nnp(unittest.TestCase):
             self.assertEqual(len(datafile.coords), 2)
             self.assertEqual(len(datafile.variables), 6)
 
+    def test_binary_ascii_mix(self):
+        file = r"AvsBinaryAscii_mix\ldos_total_cbr_Gamma.fld"
+        filepath = os.path.join(folder_nnp, file)
+        datafile = outputs.DataFile(filepath, product="nextnano++")
+        self.assertEqual(len(datafile.coords), 2)
+        self.assertEqual(len(datafile.variables), 1)
+    
     # TODO add tests for loading Origin like file
     # TODO add tests for exporting binary data
 
