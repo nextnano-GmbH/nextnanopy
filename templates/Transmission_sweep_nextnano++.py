@@ -12,7 +12,7 @@ FigFormat = '.jpg' # other options: .pdf, .svg, .png
 
 # Specify input file folder  (please adjust path if necessary)
 # nextnano++ examples
-input_folder = r'C:\Program Files\nextnano\2025_08_21\nextnano++\examples\transmission'
+input_folder = r'C:\Program Files\nextnano\2025_09_18\nextnano++\examples\transmission'
 
 # specify input file name
 filename = r'transmission-double-barrier_Birner_JCEL_2009_1D_nnp.nnp'
@@ -36,6 +36,33 @@ sweep.save_sweep(integer_only_in_name=True)
 sweep.execute_sweep(delete_input_files=True, parallel_limit=3, show_log=False) # parallel limit is number of parallel executions, best is number of CPU cores - 1 
 # plot the results 
 print("Plotting the data...")
+
+for path, combination in sweep.sweep_output_infodict.items():
+    val = combination[sweep_variable]
+    data_folder = nn.DataFolder(path)
+    file_ldos = data_folder.go_to("bias_00000", "CBR", "cbr", "Gamma", "ldos_total.fld")
+    file_cb = data_folder.go_to("bias_00000", "bandedge_Gamma.dat")
+    datafile_cb = nn.DataFile(file_cb, product="nextnano++")
+    datafile_ldos = nn.DataFile(file_ldos, product="nextnano++")
+
+    x=datafile_ldos.coords['x']
+    y=datafile_ldos.coords['y']
+    z=datafile_ldos.variables[0]
+
+    fig, ax = plt.subplots(1)
+    pcolor = ax.pcolormesh(x.value, y.value, z.value.T)
+    cbar = fig.colorbar(pcolor)
+    cbar.set_label(f"{z.name} ({z.unit})")
+    ax.plot(datafile_cb.coords[0].value,datafile_cb.variables[0].value, label="cb",
+            color='white', linestyle='-')
+
+    ax.set_xlim(x.value.min(), x.value.max())
+    ax.set_xlabel(f"{x.name} ({x.unit})")
+    ax.set_ylabel(f"{y.name} ({y.unit})")
+    ax.set_title('Local density of states')
+    fig.tight_layout()
+    fig.savefig(os.path.join(path, f'LDOS_{sweep_variable}_{val}{FigFormat}'))
+
 fig, ax = plt.subplots(1)
 
 for path, combination in sweep.sweep_output_infodict.items():
@@ -51,6 +78,8 @@ for path, combination in sweep.sweep_output_infodict.items():
         ax2.set_ylabel(f"{df.variables[1].name} ({df.variables[1].unit})", size=14)
         ax2.set_title(f'Transmission {sweep_variable}={val}', size=16)
         fig2.savefig(os.path.join(path, f'Transmission_{sweep_variable}_{val}{FigFormat}'))
+
+    
 
 # Bring the first figure window to the front
 plt.figure(fig.number)

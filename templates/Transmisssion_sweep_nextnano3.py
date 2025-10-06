@@ -11,7 +11,7 @@ FigFormat = '.jpg' # other options: .pdf, .svg, .png
 
 # Specify input file folder  (please adjust path if necessary)
 # nextnano++ examples
-input_folder = r'C:\Program Files\nextnano\2025_08_21\nextnano3\examples\education\lecture_on_quantum_mechanics'
+input_folder = r'C:\Program Files\nextnano\2025_09_18\nextnano3\examples\education\lecture_on_quantum_mechanics'
 
 # specify input file name
 filename = r'Transmission_Double_Barrier_1D_nn3.nn3'
