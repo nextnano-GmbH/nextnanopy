@@ -39,6 +39,13 @@ Do you want to help nextnanopy? Please send an email to [python@nextnano.com](ma
 
 ## History of changes
 
+### Version 1.0.2 (Oct 10th, 2025)
+
+- bugfix: now supports the avs binary files with ascii coords
+- added nextnano mpl style for plotting, see utils
+- added possibility to save input files in temporary folder: InputFile.save(temp=True)
+- improved gds import
+
 ### Version 1.0.1 (Jul 12th, 2025)
 
 - .txt files are read as Dat without coords (all columns are variables)
