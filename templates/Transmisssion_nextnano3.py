@@ -26,8 +26,7 @@ input_file = nn.InputFile(input_path)
 
 # modify and save the input file in the working directory
 input_file.set_variable(variable, value=value, comment='<= PYTHON <= modified variable')
-input_file_modified_location = os.path.join(this_dir, filename)
-input_file.save(input_file_modified_location, overwrite=True)
+input_file.save(temp=True)
 print("Executing nextnano3 ...")
 input_file.execute(show_log=False) # change to True if you want to see the log in the console
 # get path to output folder
