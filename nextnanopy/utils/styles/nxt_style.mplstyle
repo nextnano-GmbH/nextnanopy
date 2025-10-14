@@ -21,4 +21,4 @@ lines.linewidth : 1.5
 
 # Color cycle
 # nxt_blue, wild_strawberry, golden, green, black
-axes.prop_cycle : cycler('color', ["#13ADB5", "#FF2967", "#FDBA42", "#009B55", "black"])
+axes.prop_cycle : cycler('color', ["#13ADB5", "#FF2967", "#f0c800", "#009B55", "black"])
