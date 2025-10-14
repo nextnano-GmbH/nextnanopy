@@ -63,7 +63,7 @@ def get_delta_alpha_energy_grid(FOLDER_PATH):
     return coord, delta_alpha_list
 
 # CHANGE THE OUTPUT FOLDER PATH TO YOUR SIMULATION FOLDER
-output_folder = r"C:\Users\gevor\OneDrive\Documents\nextnano\Output\1D_Ge_GeSi_QCSE_Kuo2005_simplified_8kp_nnp_exciton(4)"
+output_folder = r"C:\Users\Heorhii\Documents\nextnano\Output\1D_Ge_GeSi_QCSE_Kuo2005_simplified_8kp_nnp_exciton"
 coord, delta_alpha_list = get_delta_alpha_energy_grid(output_folder)
 
 coord_angular = coord * 1e12 * 2 * np.pi  # in ra/s
