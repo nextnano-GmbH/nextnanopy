@@ -20,5 +20,5 @@ figure.facecolor : white
 lines.linewidth : 1.5
 
 # Color cycle
-# nxt_blue, wild_strawberry, golden, green, black
+# nxt_blue, wild_strawberry, dandelion, green, black
 axes.prop_cycle : cycler('color', ["#13ADB5", "#FF2967", "#f0c800", "#009B55", "black"])
