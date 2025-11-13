@@ -3,8 +3,10 @@ from matplotlib.colors import LinearSegmentedColormap
 
 NXT_BLUE = (19/256, 173/256, 181/256) #13adb5 
 WILD_STRAWBERRY = (255/256, 41/256, 103/256) #ff2966
-GOLDEN = (253/256, 188/256, 66/256) #fdbc42
 GREEN = (0/256, 155/256, 85/256) #009b55
+DANDELION = (240/256, 200/256, 0) #f0c800
+
+GOLDEN = (253/256, 188/256, 66/256) #fdbc42, not part of palette anymore, substituted by dandelion
 
 _NXT_COLORS = [
     (1, 1, 1),  # white
