@@ -19,6 +19,22 @@
 
 #----------------------------------------------------------------------------
 
+output{
+   material_parameters{
+      kp_parameters{}
+   }
+}
+run{
+
+!IF($STRAIN)
+   strain{}
+!ENDIF
+
+#  poisson{}
+   quantum{}
+}
+
+
 global{ 
    simulate1D{}
    
@@ -43,22 +59,12 @@ global{
    temperature = $Temperature
 }
 
-grid{
-                     xgrid{
-                          line{ pos =  $xmin              spacing = 0.005}
-                          line{ pos =  $xmax              spacing = 0.005}
-   }
+contacts{
+   fermi { name = "dummy" bias=0}
 }
 
-database{   # redefine some default material parameters for matching nextnano3 results
-   
-   #### AlN ###################################################################################
-   binary_wz{
-      name = AlN
-   }
 
 
-}
 
 structure{
    output_region_index{ boxes = no }
@@ -86,9 +92,13 @@ structure{
    }
 }
 
-contacts{
-   fermi { name = "dummy" bias=0}
+grid{
+                     xgrid{
+                          line{ pos =  $xmin              spacing = 0.005}
+                          line{ pos =  $xmax              spacing = 0.005}
+   }
 }
+
 
 classical{
    Gamma{}
@@ -98,47 +108,11 @@ classical{
    output_bandedges{ averaged = yes }
    output_carrier_densities{}
    output_bandgap{}
-}
-
-poisson{
-#   output_potential{}
-#   output_electric_field{}
-}
-
-
-strain{
-   pseudomorphic_strain{}
-  
-   output_strain_tensor{ simulation_system = yes }
-   output_polarization_charges{}
-   output_hydrostatic_strain{ }
-
-   output_lattice_constants{}
-   output_elastic_constants{}
-   output_piezo_constants{}
-   output_pyro_constants{}
-}
-
-#currents{
-#   output_fermi_levels{}
-#}
-
-quantum {
-   region{
-      name = "qr_6band"
-      x = [0.0, 100.0]
-      boundary{
-         x = neumann
-      }
-      no_density = yes # only wave functions are calculated, not charge densities
-      kp_6band{
-         num_ev = 12
-      }
-      output_wavefunctions{
-         amplitudes = no
-         probabilities = no
-      }
-      bulk_dispersion{
+   bulk_dispersion{
+        Gamma{}
+        HH{}
+        LH{}
+        SO{}
 
          lines{ # set of dispersion lines along crystal directions of high symmetry 
             name = "lines"
@@ -163,20 +137,57 @@ quantum {
          output_bulk_dispersions{}
          output_masses{}
       }
+}
+
+strain{
+   pseudomorphic_strain{}
+  
+   output_strain_tensor{ simulation_system = yes }
+   output_polarization_charge{}
+   output_hydrostatic_strain{ }
+
+   output_lattice_constants{}
+   output_elastic_constants{}
+   output_piezo_constants{}
+   output_pyro_constants{}
+}
+
+
+poisson{
+}
+
+
+
+#currents{
+#   output_fermi_levels{}
+#}
+
+quantum {
+   region{
+      name = "qr_6band"
+      x = [0.0, 100.0]
+      boundary{
+         x = neumann
+      }
+      no_density = yes # only wave functions are calculated, not charge densities
+      kp_6band{
+         num_ev = 12
+      }
+      output_wavefunctions{
+         amplitudes = no
+         probabilities = no
+      }
+      
    }
 }
 
-output{
-   material_parameters{
-      kp_parameters{}
+database{   # redefine some default material parameters for matching nextnano3 results
+   
+   #### AlN ###################################################################################
+   binary_wz{
+      name = AlN
    }
-}
-run{
 
-!IF($STRAIN)
-   strain{}
-!ENDIF
 
-#  poisson{}
-   quantum{}
 }
+
