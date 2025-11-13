@@ -135,8 +135,8 @@ def calculate_CV(output_directory_path, bias1 = None, bias2 = None, total = Fals
 
     dfolder = DataFolder(output_directory_path)
 
-    dfile_hole  = DataFile(dfolder.file('integrated_density_hole.dat'), FirstVarIsCoordFlag=False, product = 'nextnano++')
-    dfile_electron = DataFile(dfolder.file('integrated_density_electron.dat'), FirstVarIsCoordFlag=False, product = 'nextnano++')
+    dfile_hole  = DataFile(dfolder.find('integrated_density_hole.dat', deep=True)[0], FirstVarIsCoordFlag=False, product = 'nextnano++')
+    dfile_electron = DataFile(dfolder.find('integrated_density_electron.dat', deep=True)[0], FirstVarIsCoordFlag=False, product = 'nextnano++')
 
     bias_hole_set = set([var.name for var in dfile_hole.variables if var.name.endswith('_bias')])
     bias_electron_set = set([var.name for var in dfile_electron.variables if var.name.endswith('_bias')])

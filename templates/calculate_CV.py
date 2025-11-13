@@ -1,8 +1,10 @@
 import nextnanopy as nn
 import matplotlib.pyplot as plt
 from nextnanopy.postprocess import calculate_CV
+import os
 
-input_file_path = r'input files\MIS_CV_1nmSiO2_1D_nnp.in'
+this_dir = os.path.dirname(__file__)
+input_file_path = os.path.join(this_dir, r'input files\MIS_CV_1nmSiO2_1D_nnp.in')
 
 input_file = nn.InputFile(input_file_path)
 
