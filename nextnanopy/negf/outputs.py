@@ -72,6 +72,22 @@ def get_WannierStark_norm(folder, scaling_factor=1):
     return z, pot, ws_norm_scal
 
 
+def get_WannierStark_norm_cpp(folder, scaling_factor=1):
+    ws = np.loadtxt(
+        folder + r"\EnergyEigenstates\\EigenStates.dat",
+        skiprows=2,
+        delimiter="\t",
+        unpack=True,
+    )
+    #  print('Number of states: ', len(ws)-2)
+    norm = min(ws[1])
+    z = ws[0]
+    pot = ws[1] - norm
+    ws_norm = ws[2:] - norm
+    ws_norm_scal = scale_wf(ws_norm, scaling_factor)
+    return z, pot, ws_norm_scal
+
+
 def scale_wf(wf_input, factor):
     scaled = np.copy(wf_input)
     for i, cur in enumerate(wf_input):
