@@ -16,16 +16,18 @@ fig_format = '.svg' # .svg, .jpg, .png, .pdf
 #+++++++++++++++++++
 # Specify input file  
 #+++++++++++++++++++
-input_folder = r'c:\Program Files\nextnano\2025_05_30\nextnano.NEGF\examples'
+input_folder = r'c:\Program Files\nextnano\2025_05_30\nextnano.NEGF_classic\examples'
 
-filename = r'THz_QCL_GaAs_AlGaAs_Fathololoumi_OptExpress2012_10K-FAST.negf'
+filename = r'THz_QCL_GaAs_AlGaAs_Fathololoumi_OptExpress2012_10K-FAST.xml'
 
-software = "nextnano.NEGF" 
+software = "nextnano.NEGF_classic" 
 
 # execute the input file
 print("starting nextnano...")
 input_path = os.path.join(input_folder, filename)
 input_file = nn.InputFile(input_path)
+
+input_file.save(temp=True) # save a temporary copy of the input file
 
 input_file.execute() # Put line into comment if you only want to do post-processing of results
 
@@ -33,7 +35,7 @@ folder_output = input_file.folder_output
 # if you do not execute the input file, you can also specify the output folder manually here:
 # folder_output = r"c:\Users\Heorhii\Documents\nextnano\OutputNnpy\THz_QCL_GaAs_AlGaAs_Fathololoumi_OptExpress2012_10K-FAST"
 
-bias_folder_name = '2mV'  # example for nextnano.NEGF
+bias_folder_name = '2mV'  # example for nextnano.NEGF_classic
 data_folder = nn.DataFolder(folder_output)
 bias_folder_fullpath = data_folder.go_to(bias_folder_name).fullpath
 cb_data_file = data_folder.go_to(bias_folder_name, "ConductionBandEdge.dat")
@@ -56,9 +58,9 @@ fig.savefig(fig_location)
 # plot 2D plots: LDOS, Carrier density, Current density
 extension2Dfile = ".vtr"
 subfolder_2D = '2D_plots'
-file_ldos = 'DensityOfStates.vtr'
-file_density = 'CarrierDensity.vtr'
-file_current = 'CurrentDensity_withDispersion.vtr'
+file_ldos = 'DOS_energy_resolved.vtr'
+file_density = 'CarrierDensity_energy_resolved.vtr'
+file_current = 'CurrentDensity_energy_resolved.vtr'
 
 
 for file, label in zip([file_ldos, file_density, file_current], ['Local density of states LDOS(x,E)', 'Carrier density n(x,E)', 'Current density j(x,E)']):
@@ -79,8 +81,7 @@ for file, label in zip([file_ldos, file_density, file_current], ['Local density 
 
 
 # plot normalized band structure
-# TODO fix the name of the function in nextnanopy.negf.nnnegf
-z,pot,ws = nnnegf.get_WannierStark_norm_cpp(bias_folder_fullpath,scaling_factor=0.3)
+z,pot,ws = nnnegf.get_WannierStark_norm(bias_folder_fullpath,scaling_factor=0.3)
 fig, ax = plt.subplots()
 nsp = int(len(ws)/3)
 ax.plot(z,pot,color='black')
@@ -93,6 +94,7 @@ for i in range(nsp-3,2*nsp+1):
     filename = bias_folder_fullpath+r'\psi_squared.jpg'
     print('Saving file: ',filename)
     fig.savefig(filename)
+
 
 plt.show()
 print('=====================================')  
