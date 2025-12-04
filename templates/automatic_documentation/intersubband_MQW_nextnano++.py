@@ -4,7 +4,7 @@ import sys,os
 #import numpy as np
 import matplotlib.pyplot as plt
 
-import config_nextnano     # This should be your default configuration.
+# import config_nextnano     # This should be your default configuration.
 #import config_nextnano_temp # This could be a modified configuration file.
 #config file is stored in C:\Users\<User>\.nextnanopy-config
 
@@ -20,32 +20,10 @@ FigFormat = '.jpg'
 # Specify software product here!
 #================================
 software = 'nextnano++'
-#software = 'nextnano3'
-#software = 'nextnano.NEGF'
-#software = 'nextnano.MSB'
-#===========================
 
-folder_examples_nnp    = r'C:\Program Files\nextnano\2020_12_09\Sample files\nextnano++ sample files'
-folder_examples_nn3    = r'C:\Program Files\nextnano\2020_12_09\Sample files\nextnano3 sample files'
-folder_examples_nnNEGF = r'D:\nextnano.NEGF\nextnanoNEGF_2020_11_16\nextnano.NEGF sample files'
-folder_examples_nnMSB  = r'D:\nextnano.MSB\nextnano.MSB_2017_12_20\nextnano\2017_12_20\nextnano.MSB sample files'
 
-#++++++++++++++++++++++++++++++++++++++++++++++
-# These lines have to be adjusted by the user.  
-#++++++++++++++++++++++++++++++++++++++++++++++
-#folder_examples_nn3 = r'N:\users\nextnano\nextnano GmbH - Tutorials\Tutorials\2D The CBR method (Transmission)'
-#===========================
-if(software=="nextnano++"):
-    subfolder = ''
-  # subfolder = r'\Quantum Mechanics examples'
-elif(software=="nextnano3"):
-    subfolder = ''
-  # subfolder = r'\Quantum Mechanics examples'
-elif(software=="nextnano.NEGF"):
-    subfolder = ''
-elif(software=="nextnano.MSB"):
-    subfolder = ''
-#===========================
+folder_examples    = r'C:\Program Files\nextnano\2025_09_18\nextnano++\examples\optical_spectra'
+
 
 software_short_nnp    = '_nnp'
 software_short_nn3    = '_nn3'
@@ -63,34 +41,21 @@ elif(software=="nextnano.MSB"):
     software_short = software_short_nnMSB
 #===========================
 
-#===========================
-if(software=="nextnano++"):
-    folder_examples = folder_examples_nnp + subfolder   # nextnano++
-elif(software=="nextnano3"):
-    folder_examples = folder_examples_nn3 + subfolder   # nextnano3
-elif(software=="nextnano.NEGF"):
-    folder_examples = folder_examples_nnNEGF + subfolder # nextnano.NEGF
-elif(software=="nextnano.MSB"):
-    folder_examples = folder_examples_nnMSB + subfolder # nextnano.MSB
-#===========================
+
 
 #==========================================================================
 # Define input and output folders. If they do not exist, they are created.
 #==========================================================================
-home_directory = r'C:\Users\stefan.birner.NEXTNANO\Documents\nextnano'
+
 folder_output        = nn.config.config[software]['outputdirectory']
-folder_python_input  = os.path.join(home_directory,r'nextnanopy\input')
-folder_python_output = os.path.join(home_directory,r'nextnanopy\output')
-folder_examples = folder_python_input
+folder_examples = folder_examples
 
 mkdir_if_not_exist(folder_output)
-mkdir_if_not_exist(folder_python_output)
-
+mkdir_if_not_exist(folder_examples)
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Open reStructured Text file (.rst) for documentation
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++
-file_docu =  open(os.path.join(folder_python_output,'documentation'+software_short+'.rst'),"w+")
-
+file_docu =  open(os.path.join(folder_output,'documentation'+software_short+'.rst'),"w+")
 DocuInfo = "**Automatic documentation: Running simulations, generating figures and reStructured Text (*.rst) using nextnanopy**"
 
 file_docu.write("\n")
@@ -205,7 +170,7 @@ for nn_file in range(6):
     if(software=="nextnano.NEGF" or software=="nextnano.MSB"):
         FileExtension = '.xml' # for nextnano.NEGF and nextnano.MSB
     else:
-        FileExtension = '.in'  # for nextnano++ and nextnano3
+        FileExtension = '.nnp'  # for nextnano++ and nextnano3
     
     my_input_file = my_input_file_no_extension+FileExtension
     
@@ -267,16 +232,16 @@ for nn_file in range(6):
     #++++++++++++++++++++++++++++++++++++++++++++++
     #===========================
         if(software=="nextnano++"):
-            file_cb  = os.path.join(folder_output,input_file_name_variable+r'\bias_00000'+r'\bandedges.dat') 
+            file_cb  = os.path.join(folder_output,input_file_name_variable, r'bias_00000', 'bandedges.dat') 
             if sg_kp == 'sg':
-               file_psi = os.path.join(folder_output,input_file_name_variable+r'\bias_00000'+r'\Quantum'+r'\wf_probabilities_shift_quantum_region_Gamma_0000.dat') 
+               file_psi = os.path.join(folder_output,input_file_name_variable, r'bias_00000', 'Quantum', "quantum_region", "Gamma", 'probabilities_shift_k00000.dat') 
             elif sg_kp == 'kp':
-               file_psi = os.path.join(folder_output,input_file_name_variable+r'\bias_00000'+r'\Quantum'+r'\wf_probabilities_shift_quantum_region_kp8_0000.dat') 
+               file_psi = os.path.join(folder_output,input_file_name_variable, r'bias_00000', 'Quantum', "quantum_region", "kp8", 'probabilities_shift_k00000.dat') 
         elif(software=="nextnano3"):
-            file_cb  = os.path.join(folder_output,input_file_name_variable+r'\band_structure'+r'\BandEdges.dat') 
+            file_cb  = os.path.join(folder_output,input_file_name_variable,r'band_structure',r'BandEdges.dat') 
             if sg_kp == 'sg':
-               file_psi = os.path.join(folder_output,input_file_name_variable+r'\Schroedinger_1band'+r'\cb1_sg1_deg1_psi_squared_shift.dat') 
-               file_abs = os.path.join(folder_output,input_file_name_variable+r'\optics'+r'\absorption_intraband_cb1_sg1_deg1.dat') 
+               file_psi = os.path.join(folder_output,input_file_name_variable,r'Schroedinger_1band',r'cb1_sg1_deg1_psi_squared_shift.dat') 
+               file_abs = os.path.join(folder_output,input_file_name_variable,r'optics',r'absorption_intraband_cb1_sg1_deg1.dat') 
             elif sg_kp == 'kp':
                file_psi = os.path.join(folder_output,input_file_name_variable+r'\Schroedinger_kp'+r'\kp8_psi_squared_el_kpar001_1D_neu_shift.dat') 
                file_abs = os.path.join(folder_output,input_file_name_variable+r'\optics'+r'\absorption_intraband_cb1_kp8.dat') 
@@ -416,7 +381,7 @@ for nn_file in range(6):
         fig_psi.tight_layout()
       # plt.show()
         filename_cb_psi = 'cb_psi'+'_'+NameOfStructureFile+'_'+sg_kp+software_short+'.jpg'
-        fig_psi.savefig(os.path.join(folder_python_output,filename_cb_psi))
+        fig_psi.savefig(os.path.join(folder_output,filename_cb_psi))
 
         
         #---------------------
@@ -451,7 +416,7 @@ file_docu.write(r"----------------------"+"\n") # horizontal line
 file_docu.write("\n")
 file_docu.write("\n")
 file_docu.close() 
-    
+   
 print(f'=====================================')  
 print(f'Done nextnanopy.')  
 print(f'=====================================')  
