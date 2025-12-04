@@ -7,18 +7,9 @@ from pathlib import Path
 from nextnanopy.utils.plotting import use_nxt_style, NXT_BLUE, WILD_STRAWBERRY, GREEN
 use_nxt_style()
 #config file is stored in C:\Users\<User>\.nextnanopy-config
+# TODO make self consistent optional like in nn3
 
-#FigFormat = '.pdf'
-#FigFormat = '.svg'
-FigFormat = '.jpg'
-#FigFormat = '.png'
-
-
-#================================
-# Specify software product here!
-#================================
 software = 'nextnano++'
-
 
 folder_examples    = r'C:\Program Files\nextnano\2025_09_18\nextnano++\examples\optical_spectra'
 
