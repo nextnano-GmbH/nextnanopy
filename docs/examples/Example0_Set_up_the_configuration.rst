@@ -325,7 +325,7 @@ parameters.
                                                                                  
     In case this file is missing or seems incomplete or corrupted, please contact
     nextnano GmbH, Germany by submitting a support request on www.nextnano.de or 
-    by sending an email to support@nextnano.com in order to receive a new copy.  
+    by contacting us at https://nextnano.com/goto/support/ in order to receive a new copy.  
                                                                                  
     ANY USE OF THE NEXTNANO++ CODE CONSTITUTES ACCEPTANCE OF THE TERMS OF THE    
     COPYRIGHT NOTICE.                                                            
@@ -756,7 +756,7 @@ threads:
                                                                                  
     In case this file is missing or seems incomplete or corrupted, please contact
     nextnano GmbH, Germany by submitting a support request on www.nextnano.de or 
-    by sending an email to support@nextnano.com in order to receive a new copy.  
+    by contacting us at https://nextnano.com/goto/support/ in order to receive a new copy.  
                                                                                  
     ANY USE OF THE NEXTNANO++ CODE CONSTITUTES ACCEPTANCE OF THE TERMS OF THE    
     COPYRIGHT NOTICE.                                                            
