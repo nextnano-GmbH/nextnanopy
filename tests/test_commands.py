@@ -101,29 +101,25 @@ class TestCommands(unittest.TestCase):
         license = os.path.join(r"License", "License_nnMSB.lic")
         database = os.path.join("nextnano.MSB", "Materials.xml")
         outputdirectory = r"tests\datafiles"
-        debug = 0
+        threads = 1
 
-        cmd = f'"{exe}" -inputfile "{inputfile}" -license "{license}" -database "{database}" -outputdirectory "{outputdirectory}"'
         kwargs = dict(
             inputfile=inputfile,
             exe=exe,
             license=license,
             database=database,
             outputdirectory=outputdirectory,
-            debug=debug,
+            threads=1,
         )
-        self.assertEqual(command_msb(**kwargs), cmd)
-        self.assertEqual(commands.command(**kwargs), cmd)
 
-        debug = 1
-        cmd = f'"{exe}" -inputfile "{inputfile}" -license "{license}" -database "{database}" -outputdirectory "{outputdirectory}" -debug 1'
+        cmd = f'"{exe}" --license "{license}" --database "{database}" --threads {threads} --outputdirectory "{outputdirectory}" --noautooutdir "{inputfile}"'
         kwargs = dict(
             inputfile=inputfile,
             exe=exe,
             license=license,
             database=database,
             outputdirectory=outputdirectory,
-            debug=debug,
+            threads=threads,
         )
         self.assertEqual(command_msb(**kwargs), cmd)
         self.assertEqual(commands.command(**kwargs), cmd)
