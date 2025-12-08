@@ -5,7 +5,7 @@ import sys,os
 import matplotlib.pyplot as plt
 
 #import config_nextnano     # This should be your default configuration.
-import config_nextnano_temp # This could be a modified configuration file.
+# import config_nextnano_temp # This could be a modified configuration file.
 #config file is stored in C:\Users\<User>\.nextnanopy-config
 
 FigFormat1 = '.pdf' # high quality
