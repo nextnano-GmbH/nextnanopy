@@ -39,6 +39,10 @@ Do you want to help nextnanopy? Please send an email to [python@nextnano.com](ma
 
 ## History of changes
 
+### Unreleased
+
+- now modern MSB input files are supported
+
 ### Version 1.0.2 (Oct 10th, 2025)
 
 - bugfix: now supports the avs binary files with ascii coords
