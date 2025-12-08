@@ -232,21 +232,21 @@ class TestOutputs_nnp(unittest.TestCase):
 
     def test_all_2D(self):
         files = [
-            r"AvsAscii\bandedges.avs.fld",
-            r"AvsAscii_one_file\bandedges.fld",
-            r"AvsBinary\bandedges.avs.fld",
-            r"AvsBinary_one_file\bandedges.fld",
-            r"VTKAscii\bandedges.vtr",
+            Path("AvsAscii") / "bandedges.avs.fld",
+            Path("AvsAscii_one_file") / "bandedges.fld",
+            Path("AvsBinary") / "bandedges.avs.fld",
+            Path("AvsBinary_one_file") / "bandedges.fld",
+            Path("VTKAscii") / "bandedges.vtr",
         ]
         for file in files:
-            filepath = os.path.join(folder_nnp, file)
+            filepath = Path(folder_nnp) / file
             datafile = outputs.DataFile(filepath, product="nextnano++")
             self.assertEqual(len(datafile.coords), 2)
             self.assertEqual(len(datafile.variables), 6)
 
     def test_binary_ascii_mix(self):
-        file = r"AvsBinaryAscii_mix\ldos_total_cbr_Gamma.fld"
-        filepath = os.path.join(folder_nnp, file)
+        file = Path("AvsBinaryAscii_mix") / "ldos_total_cbr_Gamma.fld"
+        filepath = Path(folder_nnp) / file
         datafile = outputs.DataFile(filepath, product="nextnano++")
         self.assertEqual(len(datafile.coords), 2)
         self.assertEqual(len(datafile.variables), 1)
