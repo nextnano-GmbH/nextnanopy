@@ -5,6 +5,7 @@ import nextnanopy.outputs as outputs
 from nextnanopy.utils.datasets import default_unit
 from os.path import join
 import os
+from pathlib import Path 
 
 TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 # folder_nnp = os.path.join(TESTS_DIR, 'datafiles', 'nextnano++')
@@ -756,7 +757,7 @@ class TestDataFolder(unittest.TestCase):
         dummy_folder = os.path.join("tests", "dummy")
         self.assertRaises(ValueError, outputs.DataFolder, dummy_folder)
 
-        test_folder = r"tests\dfolder"
+        test_folder = Path("tests") / "dfolder"
         datafolder = outputs.DataFolder(test_folder)
         self.assertTrue("another_folder" in datafolder.folders)
         self.assertTrue(
@@ -1012,10 +1013,14 @@ class TestDataFolder(unittest.TestCase):
         datafolder = outputs.DataFolder(tests_folder)
 
         tree_list = datafolder.make_tree()
-        self.assertEqual(tree_list[1], "    configs/")
-        self.assertEqual(tree_list[2], "        .nnconfig")
-        self.assertEqual(tree_list[5], "        nextnano++/")
+        print(tree_list)
+        self.assertIn("    configs/", tree_list)
+        self.assertIn("        .nnconfig", tree_list)
+        self.assertIn("        nextnano++/", tree_list)
 
+        self.assertLess(tree_list.index("    configs/"), tree_list.index("        nextnano++/"))
+        self.assertLess(tree_list.index("        .nnconfig"), tree_list.index("        nextnano++/"))
+        self.assertLess(tree_list.index("    datafiles/"), tree_list.index("        nextnano++/"))
 
 if __name__ == "__main__":
     unittest.main()

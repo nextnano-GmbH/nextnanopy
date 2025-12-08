@@ -114,7 +114,7 @@ class DataFolder(object):
         self.create_navigation()
 
     def load(self):
-        list_of_nodes = os.listdir(self.fullpath)
+        list_of_nodes = sorted(os.listdir(self.fullpath))
         for node in list_of_nodes:
             node_path = os.path.join(self.fullpath, node)
             if os.path.isdir(node_path):
