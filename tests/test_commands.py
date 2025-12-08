@@ -96,7 +96,7 @@ class TestCommands(unittest.TestCase):
         from nextnanopy.msb.defaults import command_msb
 
         self.maxDiff = None
-        inputfile = os.path.join(folder_msb, "example.xml")
+        inputfile = os.path.join(folder_msb, "example.msb")
         exe = os.path.join("nextnano.MSB", "nextnano.MSB.exe")
         license = os.path.join(r"License", "License_nnMSB.lic")
         database = os.path.join("nextnano.MSB", "Materials.xml")

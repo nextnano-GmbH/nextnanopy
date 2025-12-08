@@ -1,0 +1,256 @@
+# converted from QW_InGaAs_ballistic.xml
+
+# collected variable definitions
+$Well = 0.14  				# In concentration of well. 
+
+
+nextnano.MSB{ 				# Version = 1.1.0
+    Header{
+        Author = "Bernhard Huber"
+        Version = 1.0
+        Content = "See comments in input file."
+        # 
+        #       Quantum Well Structure - InGaAs/GaAs n-i-n heterostructure
+        # 
+        #       This input file is based on the article:
+        #         [Kubis_HCIS14_2005]
+        #         Self-consistent quantum transport theory of carrier capture in heterostructures
+        #         T. Kubis, A. Trellakis, P. Vogl
+        #         Proceedings of the 14th International Conference on Nonequilibrium Carrier Dynamics in Semiconductors, M. Saraniti and U. Ravaioli, eds., Chicago, USA, July 25-19, 2005, Springer Proceedings in Physics, vol. 110, pp. 369-372
+        # 
+        #       More details can be found here:
+        #         Applying the NEGF method to a quantum well
+        #         http://www.nextnano.com/nextnano3/tutorial/1Dtutorial_QW_NEGF.htm
+        # 
+        #     
+    }
+
+    Output{
+        Directory = "../../Output/QW_InGaAs" 				# Comment = Name of output folder for calculated results.
+        WriteOutputEveryNthIteration = 2 				# Comment = Determines how frequent output is written.
+        MaxNumberOfEigenstates = 15 				# Comment = Determines number of eigenstates written in output.
+        FormatAsciiEnabled = true 				# Comment = Enable output for ASCII files containing data in columns.
+        FormatAsciiExt = .dat 				# Comment = Specify the file extension for ASCII files containing data in columns.
+        FormatGnuPlotEnabled = true 				# Comment = Enable GnuPlot output based on text output.
+        FormatGnuPlotExt = .gnu.plt 				# Comment = Specify the file extension for GnuPlot output.
+        FormatAvsEnabled = true 				# Comment = Enable AVS output.
+        FormatAvsExt = .avs 				# Comment = Specify the file extension for AVS files.
+        FormatAvsBinary = binary 				# Comment = Specify AVS output mode [binary|ascii]
+        FormatTextEnabled = true 				# Comment = Enable text output.
+        FormatTextExt = .txt 				# Comment = Specify the file extension for text files.
+    }
+	
+    Variables{
+    }
+
+    Device{
+        Temperature = 300 				# Unit = K
+        Grid{
+            Spacing = 1.00 				# Unit = nm
+        }
+
+        Energy{
+            Nodes = 1001 				# Comment = Number of energy grid points.
+            Range = 0.4 				# Unit = eV 		# Comment = Offset is based on conduction band edge, i.e. Input\BandEdge_conduction_input.dat.
+        }
+
+        Crystal = Zincblende
+        Orientation{
+            x_axis{
+                h = 1
+                k = 0
+                l = 0
+            }
+
+            y_axis{
+                h = 0
+                k = 1
+                l = 0
+            }
+
+        }
+
+        Substrate{
+            Material{
+                Base = GaAs
+            }
+
+        }
+
+        Strain = no
+        Layer{
+            BeginCluster = Center
+            Thickness = 17.0 				# Unit = nm
+            Material{
+                Base = GaAs
+            }
+
+            Probes = 1.0
+            Doping = 1e18 				# Unit = 1/cm^3
+        }
+
+        Layer{
+            Thickness = 2.0 				# Unit = nm
+            Material{
+                Base = GaAs
+            }
+
+            Probes = 1.0
+            Doping = 0 				# Unit = 1/cm^3
+        }
+
+        Layer{
+            Thickness = 12.0 				# Unit = nm
+            Material{
+                Base = "In(x)Ga(1-x)As"
+                AlloyX = $Well
+            }
+
+            Probes = 1.0
+            Doping = 0
+        }
+
+        Layer{
+            Thickness = 2.0 				# Unit = nm
+            Material{
+                Base = GaAs
+            }
+
+            Probes = 1.0
+            Doping = 0 				# Unit = 1/cm^3
+        }
+
+        Layer{
+            EndCluster = Center
+            Thickness = 17.0 				# Unit = nm
+            Material{
+                Base = GaAs
+            }
+
+            Probes = 1.0
+            Doping = 1e18 				# Unit = 1/cm^3
+        }
+
+        Lead{
+            Name = Source
+            Voltage{
+                SpecifiedByElectricField = no
+                Initial = 0.000 				# Unit = V
+            }
+
+        }
+
+        Lead{
+            Name = Drain
+            Voltage{
+                SpecifiedByElectricField = no 				# Comment = Specifies the voltage as electrical field across the device. The units of Initial, Final, and Delta are [kV/cm]. Valid input is [yes|no]. Default is [no].
+                Cluster = Center
+                Initial = 0 				# Unit = V
+                Final = 0 				# Unit = V
+                Steps = 1 				# Unit = #
+            }
+
+        }
+
+        Material_Parameters{
+            OverwriteMaterial{
+                Material{
+                    Name = GaAs
+                    ConductionBandOffset = -1.519 				# Unit = eV
+                    ValenceBandOffset = -1.519 				# Unit = eV
+                    BandGap = 1.519 				# Unit = eV
+                    BandGapAlpha = 0 				# Unit = eV/K
+                    BandGapBeta = 0 				# Unit = K
+                    ElectronMass = 0.067 				# Unit = m0
+                    EpsStatic = 12.93
+                    EpsOptic = 10.89
+                    DeformationPotential = -9.36 				# Unit = eV
+                    MaterialDensity = 5.32e3 				# Unit = kg/m^3
+                    VelocityOfSound = 5.2e3 				# Unit = m/s
+                    LOPhononEnergy = 35e-3 				# Unit = eV
+                    LOPhononWidth = 3e-3 				# Unit = eV
+                    AcousticPhononEnergy = 5e-3 				# Unit = eV
+                    LatticeA = 0.565325 				# Unit = nm
+                    ElasticC11 = 122.1 				# Unit = GPa
+                    ElasticC12 = 56.6 				# Unit = GPa
+                    ElasticC44 = 60.0 				# Unit = GPa
+                    PiezoE14 = -0.160 				# Unit = C/m^2
+                }
+
+                Material{
+                    Name = InAs
+                    ConductionBandOffset = -1.4884285714285714285714285714286 				# Unit = eV
+                    ValenceBandOffset = -1.4884285714285714285714285714286 				# Unit = eV
+                    BandGap = 0.417 				# Unit = eV
+                    BandGapAlpha = 0 				# Unit = eV/K
+                    BandGapBeta = 0 				# Unit = K
+                    ElectronMass = 0.067 				# Unit = m0
+                    EpsStatic = 12.93
+                    EpsOptic = 10.89
+                    DeformationPotential = -6.66 				# Unit = eV
+                    MaterialDensity = 5.32e3 				# Unit = kg/m^3
+                    VelocityOfSound = 5.2e3 				# Unit = m/s
+                    LOPhononEnergy = 35e-3 				# Unit = eV
+                    LOPhononWidth = 3e-3 				# Unit = eV
+                    AcousticPhononEnergy = 5e-3 				# Unit = eV
+                    LatticeA = 0.60583 				# Unit = nm
+                    ElasticC11 = 83.29 				# Unit = GPa
+                    ElasticC12 = 45.26 				# Unit = GPa
+                    ElasticC44 = 39.59 				# Unit = GPa
+                    PiezoE14 = -0.044 				# Unit = C/m^2
+                }
+
+                Material{
+                    Name = "In(x)Ga(1-x)As"
+                    Binary1 = "InAs(x)"
+                    Binary2 = "GaAs(1-x)"
+                    ConductionBandOffset = 0 				# Unit = eV
+                    ValenceBandOffset = 0 				# Unit = eV
+                    BandGap = 0 				# Unit = eV
+                    BandGapAlpha = 0 				# Unit = eV/K
+                    BandGapBeta = 0 				# Unit = K
+                    ElectronMass = 0 				# Unit = m0
+                    EpsStatic = 0
+                    EpsOptic = 0
+                    DeformationPotential = 2.61 				# Unit = eV
+                    MaterialDensity = 0 				# Unit = kg/m^3
+                    VelocityOfSound = 0 				# Unit = m/s
+                    LOPhononEnergy = 0 				# Unit = eV
+                    LOPhononWidth = 0 				# Unit = eV
+                    AcousticPhononEnergy = 0 				# Unit = eV
+                    LatticeA = 0 				# Unit = nm
+                    ElasticC11 = 0 				# Unit = GPa
+                    ElasticC12 = 0 				# Unit = GPa
+                    ElasticC44 = 0 				# Unit = GPa
+                    PiezoE14 = 0 				# Unit = C/m^2
+                }
+
+            }
+
+        }
+
+    }
+
+    MSB_1Band{
+        MaxGreenIts = 25 				# Comment = Max. iterations within the G^R cycle.
+        MaxGreenDelta = 3e-7 				# Unit = 1/nm/eV 		# Comment = Max. relative change between two cycles to abort iteration.
+        MaxProbeIts = 15 				# Comment = Max. iterations for current conservation calculation. Only used if Core.ProbeMode=iterative
+        MaxProbeNorm = 1e-9 				# Unit = A/cm^2 		# Comment = Max. absolute leakage current to abort iteration.
+        PoissonOuterDamping = 0.3 				# Comment = (1-damping)*Vnew + damping*Vold
+        PoissonInnerDamping = 0.3
+        MaxPoissonOuterIts = 25 				# Comment = Max. outer Poisson iterations where G^R is recalculated.
+        MaxPoissonInnerIts = 15 				# Comment = Max. inner Poisson iterations where the density predictor is used.
+        MaxPoissonDensityNorm = 1e9 				# Unit = 1/cm^3 		# Comment = Max. absolute density deviation to abort Poisson iterations.
+        MaxPoissonCorrectorNorm = 1e-4 				# Unit = V 		# Comment = Max. absolute potential deviation to abort Poisson iterations.
+        Core{
+            BallisticCalculation = yes 				# Comment = yes or no (default is no)
+            ProbeMode = direct 				# Comment = Specify method to calculate current conservation. Novel (more stable) method is 'direct'. [direct|iterative]
+            VoltageMode = flat 				# Comment = Specify handling of applied bias voltage. Drop-mode ensures that the specified voltage drops along the device. Flat-mode uses Neumann boundary conditions that do not guarantee a complete voltage drop. [drop|flat]
+            ScatteringStrengthConst = 0.01 				# Unit = eV 		# Comment = Additional constant scattering strength for every probe. Typical values are 0.001-0.01 and zero disables this scattering mechanism.
+            ScatteringStrengthBP = 0.01 				# Unit = eV 		# Comment = Additional scattering via Büttiker-Probes. Typical values are 0.001-0.01.
+            ScatteringStrengthMSB = 1.0 				# Unit = [0..1] 		# Comment = Novel scatterng via MSB. Scattering strength is calculated from material parameters. This parameter tunes the scattering rates from 0.0=disabled over 1.0=normal to X=amplified. 
+        }
+
+    }
+
+}

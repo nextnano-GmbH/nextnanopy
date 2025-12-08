@@ -3,9 +3,9 @@ from nextnanopy.utils.formatting import str_to_path, _path, pattern_in_file, is_
 from collections import OrderedDict
 
 fmt = {
-    'var_char': 'NOT DEFINED',
-    'com_char': '<!--',
-    'input_pattern': '<nextnano.MSB',
+    'var_char': '$',
+    'com_char': '#',
+    'input_pattern': 'nextnano.MSB{',
 }
 
 config_validator = {

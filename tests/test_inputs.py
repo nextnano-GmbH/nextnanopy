@@ -2,7 +2,7 @@ import unittest
 import os
 from nextnanopy.inputs import InputFile, Sweep
 import tempfile
-
+from pathlib import Path
 def delete_files(start, directory=os.getcwd(), exceptions=None):
     for fname in os.listdir(directory):
         if fname.startswith(start):
@@ -18,7 +18,7 @@ def delete_files(start, directory=os.getcwd(), exceptions=None):
 folder_nnp = os.path.join("tests", "datafiles", "nextnano++")
 folder_nn3 = os.path.join("tests", "datafiles", "nextnano3")
 folder_negf = os.path.join("tests", "datafiles", "nextnano.NEGF")
-
+folder_msb = Path("tests") / "datafiles" / "nextnano.MSB"
 
 class Test_nnp(unittest.TestCase):
     def test_load(self):
@@ -690,7 +690,56 @@ class Test_negf(unittest.TestCase):
     #     file.content['_entry_0'] = 'DUMMY LINE'
     #     self.assertEqual(file.content[0], 'DUMMY LINE')
 
+class Test_msb(unittest.TestCase):
+    def test_load(self):
+        fullpath = Path(folder_msb) / "example.msb"
 
+        input_file = InputFile(fullpath)
+        print(input_file)
+        print(input_file.text)
+        print(type(input_file))
+        self.assertEqual(input_file.product, "nextnano.MSB")
+        self.assertEqual(len(input_file.variables.keys()), 1)
+
+        fullpath = Path(folder_msb) / "virtual_file.msb"
+        self.assertRaises(FileNotFoundError, InputFile, fullpath)
+
+    def get_variables(self):
+        fullpath = Path(folder_msb) / "example.msb"
+        input_file = InputFile(fullpath)
+
+        self.assertEqual(
+            input_file.variables["Well"],
+            input_file.get_variable("Well"),
+        )
+        self.assertRaises(KeyError, input_file.get_variable, name="new_variable")
+
+        self.assertEqual(
+            input_file.variables["Well"].value,
+            0.14
+        )
+
+    def test_set_variable(self):
+        fullpath = Path(folder_msb) / "example.msb"
+        input_file = InputFile(fullpath)
+
+        input_file.set_variable("Well", 0.2, "Updated well width", "nm")
+        self.assertEqual(input_file.variables["Well"].value, 0.2)
+        self.assertEqual(input_file.variables["Well"].comment, "Updated well width")
+        self.assertEqual(input_file.variables["Well"].unit, "nm")
+    
+    def test_set_and_save(self):
+        fullpath = Path(folder_msb) / "example.msb"
+        input_file = InputFile(fullpath)
+
+        input_file.set_variable(name="Well", value=0.25)
+        self.assertAlmostEqual(input_file.variables["Well"].value, 0.25)
+        self.addCleanup(os.remove, Path(folder_msb) / "example_0.msb")
+        input_file.save()
+        self.assertTrue(os.path.isfile(Path(folder_msb) / "example_0.msb"))
+        input_file_1 = InputFile(Path(folder_msb) / "example_0.msb")
+        self.assertAlmostEqual(input_file_1.variables["Well"].value, 0.25)
+    
 class TestInputFile(unittest.TestCase):
 
     def test_access_by_index(self):
