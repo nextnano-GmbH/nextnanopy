@@ -4,10 +4,6 @@
 name: python test Windows
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
   workflow_dispatch:
     inputs:
       logLevel:
