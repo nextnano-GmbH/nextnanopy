@@ -39,9 +39,11 @@ Do you want to help nextnanopy? Please send an email to [python@nextnano.com](ma
 
 ## History of changes
 
-### Unreleased
+### Version 1.0.3 (Jan 8th, 2026)
 
 - now modern MSB input files are supported
+- use dandelion instead of golden in plotting pallette 
+- enforce alphabetical order in DataFolder tree 
 
 ### Version 1.0.2 (Oct 10th, 2025)
 
