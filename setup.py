@@ -3,7 +3,7 @@ from packaging.version import Version, InvalidVersion
 from importlib import import_module
 
 
-VERSION = "1.0.2"
+VERSION = "1.0.3"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -43,7 +43,7 @@ setuptools.setup(
         "Intended Audience :: Science/Research",
         "Natural Language :: English",
     ],
-    python_requires=">=3.8",
+    python_requires=">=3.10",
     install_requires=install_requires,
     extras_require=extras_require,
     package_data={"nextnanopy.utils.styles": ["*.mplstyle"]},
