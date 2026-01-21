@@ -11,6 +11,7 @@ from nextnanopy.utils.misc import savetxt, get_filename, get_folder, get_file_ex
 from nextnanopy.commands import execute as cmd_execute
 from nextnanopy import defaults
 from collections.abc import Iterable
+from typing import Callable, Any
 import tempfile
 import atexit
 
@@ -770,7 +771,8 @@ class Sweep(InputFileTemplate):
         self.sweep_infodict = DictList()
         self.sweep_output_infodict = DictList()
 
-    def save_sweep(self, delete_old_files = True, round_decimal = 8, integer_only_in_name = False):
+    def save_sweep(self, delete_old_files=True, round_decimal=8, integer_only_in_name=False,
+                   variables_comb_screen_fn : Callable[..., Any] = None):
         """
 
         Parameters
@@ -786,14 +788,20 @@ class Sweep(InputFileTemplate):
             for inputfile in self.input_files:
                 inputfile.remove()
         self.input_files = []
-        self.create_input_files(round_decimal, integer_only_in_name = integer_only_in_name)
+        self.create_input_files(round_decimal, integer_only_in_name=integer_only_in_name, variables_comb_screen_fn=variables_comb_screen_fn)
 
     def prepare_output(self, overwrite = False, output_directory = None):
         self.sweep_output_directory = self.mk_dir(overwrite=overwrite, output_directory = output_directory)
         self.create_info()
 
-    def create_input_files(self, round_decimal, integer_only_in_name = False):
+    def _screen_variables_comb(self, iteration_combinations, var_comb_screen_fn):
+        return [comb_ for comb_ in iteration_combinations if var_comb_screen_fn(comb_)]
+
+    def create_input_files(self, round_decimal, integer_only_in_name = False, variables_comb_screen_fn : Callable[..., Any] = None):
         iteration_combinations = list(itertools.product(*self.var_sweep.values()))
+        if variables_comb_screen_fn is not None:
+            iteration_combinations = self._screen_variables_comb(iteration_combinations, variables_comb_screen_fn)
+
         filename_path, filename_extension = os.path.splitext(self.fullpath)
         for combination in iteration_combinations:
             filename_end = '__'

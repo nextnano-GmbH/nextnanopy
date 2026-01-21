@@ -976,6 +976,55 @@ class TestSweep(unittest.TestCase):
             "only_variables", directory=folder_nn3, exceptions=["only_variables.in"]
         )
 
+    def test_conditional_sweep(self):
+        self.addCleanup(
+            delete_files,
+            "only_variables",
+            directory=folder_nnp,
+            exceptions=["only_variables.in"],
+        )
+        def condition(combination):
+            return combination[0] > 0.2
+        
+        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        sweep = Sweep(
+            {"float": [0.1, 0.2, 0.3, 0.4, 0.5]},
+            fullpath,
+        )
+
+        sweep.save_sweep(variables_comb_screen_fn=condition)
+
+        self.assertEqual(len(sweep.input_files), 3)
+
+        for combination in sweep.sweep_infodict.values():
+            combination = list(combination.values())
+            combination[0] > 0.2
+
+    def test_conditional_sweep_multivar(self):
+        self.addCleanup(
+            delete_files,
+            "only_variables",
+            directory=folder_nnp,
+            exceptions=["only_variables.in"],
+        )
+        def condition(combination):
+            return combination[1] > combination[0]
+        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        sweep = Sweep(
+            {"float": [0.5, 1.5, 2.5], "int": [1, 2, 3]},
+            fullpath,
+        )
+        sweep.save_sweep(variables_comb_screen_fn=condition)
+
+        self.assertEqual(len(sweep.input_files), 6)
+
+        for combination in sweep.sweep_infodict.values():
+            combination = list(combination.values())
+            self.assertTrue(combination[1] > combination[0])
+        
+        
+
+
 
 if __name__ == "__main__":
     unittest.main()
