@@ -891,6 +891,29 @@ class TestSweep(unittest.TestCase):
             )
         )
 
+    def test_nnp_save_temp(self):
+        self.addCleanup(
+            delete_files,
+            "only_variables",
+            directory=folder_nnp,
+            exceptions=["only_variables.in"],
+        )
+
+        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        sweep = Sweep({"float": [1, 2], "str": ["test1", "test2"]}, fullpath)
+        sweep.save_sweep(temp=True)
+
+        files_with_names = [
+            file for file in os.listdir(folder_nnp) if "only_variables" in file
+        ]
+        self.assertEqual(len(files_with_names), 1)
+        self.assertFalse(
+            os.path.isfile(
+                os.path.join(folder_nnp, "only_variables__float_2_str_test1_.in")
+            )
+        )
+
+
     # nn3 section
     def test_nn3_init(self):
         fullpath = os.path.join(folder_nn3, "only_variables.in")

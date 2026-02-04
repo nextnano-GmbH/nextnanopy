@@ -771,14 +771,16 @@ class Sweep(InputFileTemplate):
         self.sweep_infodict = DictList()
         self.sweep_output_infodict = DictList()
 
-    def save_sweep(self, delete_old_files=True, round_decimal=8, integer_only_in_name=False,
+    def save_sweep(self, delete_old_files=True, round_decimal=8, integer_only_in_name=False, temp=False,
                    variables_comb_screen_fn : Callable[..., Any] = None):
         """
 
         Parameters
         ----------
         delete_old_files: if True, deletes files created in previous sweeps
-        round: number of digits to round in the output folder names
+        round_decimal: number of digits to round in the output folder names
+        integer_only_in_name: if True, only integer values are used in the output folder names
+        temp: if True, input files are saved in temporary directory
 
         Returns
         -------
@@ -788,7 +790,14 @@ class Sweep(InputFileTemplate):
             for inputfile in self.input_files:
                 inputfile.remove()
         self.input_files = []
-        self.create_input_files(round_decimal, integer_only_in_name=integer_only_in_name, variables_comb_screen_fn=variables_comb_screen_fn)
+        if temp:
+            input_file = InputFile(fullpath=self.fullpath, configpath=self.configpath)
+            input_file.save(temp=True, overwrite=True)
+            path = input_file.fullpath
+        else:
+            path = self.fullpath
+        
+        self.create_input_files(path, round_decimal, integer_only_in_name=integer_only_in_name, variables_comb_screen_fn=variables_comb_screen_fn)
 
     def prepare_output(self, overwrite = False, output_directory = None):
         self.sweep_output_directory = self.mk_dir(overwrite=overwrite, output_directory = output_directory)
@@ -797,15 +806,15 @@ class Sweep(InputFileTemplate):
     def _screen_variables_comb(self, iteration_combinations, var_comb_screen_fn):
         return [comb_ for comb_ in iteration_combinations if var_comb_screen_fn(comb_)]
 
-    def create_input_files(self, round_decimal, integer_only_in_name = False, variables_comb_screen_fn : Callable[..., Any] = None):
+    def create_input_files(self, input_file_path, round_decimal, integer_only_in_name=False, variables_comb_screen_fn : Callable[..., Any] = None):
         iteration_combinations = list(itertools.product(*self.var_sweep.values()))
         if variables_comb_screen_fn is not None:
             iteration_combinations = self._screen_variables_comb(iteration_combinations, variables_comb_screen_fn)
 
-        filename_path, filename_extension = os.path.splitext(self.fullpath)
+        filename_path, filename_extension = os.path.splitext(input_file_path)
         for combination in iteration_combinations:
             filename_end = '__'
-            inputfile = InputFile(fullpath = self.fullpath, configpath = self.configpath)
+            inputfile = InputFile(fullpath=input_file_path, configpath=self.configpath)
             for var_name, var_value in zip(self.var_sweep.keys(), combination):
                 inputfile.set_variable(var_name, var_value, comment='THIS VARIABLE IS UNDER SWEEP')
                 if isinstance(var_value,str):
@@ -906,7 +915,8 @@ class Sweep(InputFileTemplate):
         import json
         filepath = os.path.join(self.sweep_output_directory, 'sweep_infodict.json')
         with open(filepath, "w") as file:
-            json.dump(self.sweep_output_infodict, file, indent=4)
+            # default conversion for numpy types
+            json.dump(self.sweep_output_infodict, file, indent=4, default=lambda o: o.item() if hasattr(o, "item") else o)
 
     def mk_dir(self,overwrite = False, output_directory = None):
         vars = ''
