@@ -22,6 +22,7 @@ https://github.com/Chikuwaq/nextnanopy-wrapper
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from scipy.integrate import simpson as simps
 from pathlib import Path
 
@@ -47,6 +48,7 @@ Angstrom_in_nm = 0.1 # [nm]
 elementary_charge_in_C = 1.602176634e-19 # [C]
 hbar = 1.054571817E-34   # Planck constant / 2Pi in [J.s]
 scale1ToCenti = 1e2 
+scale1ToNano = 1e9 
 
 # grid conversion utility function
 def convert_grid(data_y, x, x_new):
@@ -56,14 +58,36 @@ def convert_grid(data_y, x, x_new):
 
     return np.interp(x_new, x, data_y)
 
+def calculate_effective_field(df_potential, ax_to_plot=None):
+    potential = df_potential.variables['Potential'].value
+    potential_grad = np.gradient(potential, x)   # derivative
+    if ax_to_plot is None:
+        return potential_grad
+    ax1 = ax_to_plot
+    color = 'tab:red'
+    ax1.plot(x, potential, color=color)
+    ax1.set_xlabel(f'{df_potential.coords["x"].label}')
+    ax1.set_ylabel(f'{df_potential.variables["Potential"].label}', color=color)
+    # ax1.set_title('Electrostatic potential and its gradient')
+    ax1.tick_params(axis='y', labelcolor=color)
+
+    ax2 = ax1.twinx()   # instantiate a second axes that shares the same x-axis
+    color = 'tab:blue'
+    ax2.set_ylabel('Gradient (V/nm)', color=color)
+    ax2.plot(x, potential_grad, color=color, label=f'{sweep_variable}={var_value:.2f}')
+    ax2.tick_params(axis='y', labelcolor=color)
+    ax2.legend()
+    print('PLOT: electrostatic potential and its gradient')
+    return potential_grad
+
 # ===== user definition begin ===================================
 
 #================================================================
 # Specify your input file WITH EXTENSION
 #================================================================
-# TODO
-# folder_path = r'c:\Program Files\nextnano\2025_12_20\nextnano++\examples\tricks_and_hacks'
-folder_path = r"c:\Users\Heorhii\source\Workspaces\nextnanoplus\nextnano\examples\tricks_and_hacks"
+
+# correct file is in the next release of nn++
+folder_path = r'c:\Program Files\nextnano\2026_01_19\nextnano++\examples\tricks_and_hacks'
 # input file
 filename = 'InterbandTunneling_Duboz2019_nnp.nnp'
 
@@ -84,7 +108,7 @@ sweep_values = np.linspace(-0.2, -1.0, 9) # min, max, number of points
 # }
 
 # choose either 6-band k.p or single-band simulation for the valence band. You can also set both to False when you do not want to run simulation (only postprocessing with KP6 output data).
-RUN_KP6 = True   # run 6-band k.p simulation
+RUN_KP6 = True  # run 6-band k.p simulation
 # RUN_KP6 = False
 # RUN_SINGLE_BAND = True   # run single-band (HH, LH, SO) simulation
 RUN_SINGLE_BAND = False
@@ -95,11 +119,11 @@ RUN_SINGLE_BAND = False
 
 CALCULATE_EFFECTIVE_FIELD_FROM_OUTPUT = True   # calculate effective field from nextnano output
 # CALCULATE_EFFECTIVE_FIELD_FROM_OUTPUT = False   # specify effective field by hand
-# user_defined_effective_field = 1.0   # [V/nm] test
+user_defined_effective_field = 1.0   # [V/nm] test # NOT USED IF CALCULATE_EFFECTIVE_FIELD_FROM_OUTPUT = True
 
 KaneParameter_fromOutput = True   # use nextnano database value for k.p Kane parameter
 # KaneParameter_fromOutput = False   # specify Kane parameter by hand
-# user_defined_Kane_EP1 = 15   # E_P1 [eV] Duboz2019
+user_defined_Kane_EP1 = 15   # E_P1 [eV] Duboz2019 # NOT USED IF KaneParameter_fromOutput = True
 
 # CALCULATE_REDUCED_MASS_FROM_OUTPUT = True   # calculate reduced mass from nextnano output
 CALCULATE_REDUCED_MASS_FROM_OUTPUT = False   # specify reduced mass by hand
@@ -109,12 +133,6 @@ user_defined_mass_r = 0.18 * electron_mass_in_kg                # m_r [kg] Duboz
 # highest valence band. Necesarry info for bandgap calculation, but does not make much difference in dipole matrix element
 highestVB = 'LH'
 
-#================================================================
-# Select output figure format
-#================================================================
-# fig_format = '.pdf'
-# fig_format = '.svg'
-# fig_format = '.jpg'
 fig_format = '.png'
 
 
@@ -153,13 +171,6 @@ input_file = nn.InputFile(InputPath)
 # automatically detect the software
 software, FileExtension = "nextnano++", ".nnp"
 filename_no_extension = Path(filename).stem
-
-# Define output folders based on .nextnanopy-config file. If they do not exist, they are created.
-# NOT NEEDED
-# TODO: delete
-# folder_output = nn.config.get(software, 'outputdirectory')
-# folder_output_python = os.path.join(folder_output, os.path.join(r'nextnanopy', filename_no_extension))
-# mkdir_if_not_exist(folder_output_python)
 
 
 # modify the parameters in the input file
@@ -219,14 +230,10 @@ if RUN_KP6 or RUN_SINGLE_BAND:
     print('\n------------------------------------------')
     print(f'Running {software} {simulation_type} simulation')
     print('------------------------------------------\n')
-    # TODO !!!
-    # sweep.save_sweep(integer_only_in_name=True, temp=True)
-    # sweep.execute_sweep(parallel_limit=4, delete_input_files=True, show_log=False) # overwrite=True to avoid enumeration of output folders for secure output data access
+    sweep.save_sweep(integer_only_in_name=True, temp=True)
+    sweep.execute_sweep(parallel_limit=4, delete_input_files=True, show_log=False) # overwrite=True to avoid enumeration of output folders for secure output data access
     sweep_output_directory = sweep.sweep_output_directory
-    # sweep_output_infodict = sweep.sweep_output_infodict
-    import json 
-    sweep_output_directory = r"c:\Users\Heorhii\Documents\nextnano\OutputNnpy\InterbandTunneling_Duboz2019_nnp_1_sweep__BIAS0"
-    sweep_output_infodict = json.load(open(Path(sweep_output_directory) / 'sweep_infodict.json', 'r'))
+    sweep_output_infodict = sweep.sweep_output_infodict
 
 
 #%% Postprocessing (calculate tunnel current)
@@ -236,7 +243,9 @@ voltages = list()
 currents = list()
 
 # Read out simulation results and calculate tunnel current for each bias
-for sweep_subfolder, combination in sweep_output_infodict.items():
+fig_el, axes = plt.subplots(3, 3, figsize=(16, 16))
+axes = axes.flatten()   # flatten the 2D array of axes for easy iteration
+for i, (sweep_subfolder, combination) in enumerate(sweep_output_infodict.items()):
 
     var_value = combination[sweep_variable]
 
@@ -250,32 +259,11 @@ for sweep_subfolder, combination in sweep_output_infodict.items():
     x = df_potential.coords['x'].value      # this is the simulation grid
 
     if CALCULATE_EFFECTIVE_FIELD_FROM_OUTPUT:
-
-        Potential = df_potential.variables['Potential'].value
-        PotentialGrad = np.gradient(Potential, x)   # derivative
-
-        fig, ax1 = plt.subplots()
-        color = 'tab:red'
-        ax1.plot(x, Potential, color=color)
-        ax1.set_xlabel(f'{df_potential.coords["x"].label}')
-        ax1.set_ylabel(f'{df_potential.variables["Potential"].label}', color=color)
-        # ax1.set_title('Electrostatic potential and its gradient')
-        ax1.tick_params(axis='y', labelcolor=color)
-
-        ax2 = ax1.twinx()   # instantiate a second axes that shares the same x-axis
-        color = 'tab:blue'
-        ax2.set_ylabel('Gradient (V/nm)', color=color)
-        ax2.plot(x, PotentialGrad, color=color, label=f'{sweep_variable}={var_value:.2f}')
-        ax2.tick_params(axis='y', labelcolor=color)
-        ax2.legend()
-        fig.tight_layout()
-        # plt.show()
-        print('PLOT: electrostatic potential and its gradient')
-
+        potential_grad = calculate_effective_field(df_potential, ax_to_plot=axes[i])
     elif not user_defined_effective_field:
         raise RuntimeError('Please specify effective field [V/nm] or set CALCULATE_EFFECTIVE_FIELD_FROM_OUTPUT = True.')
     else:
-        PotentialGrad = np.array([user_defined_effective_field] * len(x))   # user-defined effective field
+        potential_grad = np.array([user_defined_effective_field] * len(x))   # user-defined effective field
         print('Using user-defined effective field...')
 
 
@@ -324,14 +312,14 @@ for sweep_subfolder, combination in sweep_output_infodict.items():
     print('Reading in the position-dependent material parameters...')
     splitting_path = data_folder_kp8.go_to("Structure", "spin_orbit_coupling_energies.dat")
     df_splitting = nn.DataFile(splitting_path, product=software)
-    Crystal_splitting = eV_in_J * df_splitting.variables['Delta_1'].value     # Delta_1 = Delta_crystal
-    SpinOrbit_splitting = eV_in_J * df_splitting.variables['Delta_2'].value   # Delta_2 = Delta_parallel
+    crystal_splitting = eV_in_J * df_splitting.variables['Delta_1'].value     # Delta_1 = Delta_crystal
+    spin_orbit_splitting = eV_in_J * df_splitting.variables['Delta_2'].value   # Delta_2 = Delta_parallel
 
 
     # convert from material grid to simulation grid
     x_material_grid = df_splitting.coords['x'].value   # material grid
-    Crystal_splitting_on_sim_grid   = convert_grid(Crystal_splitting, x_material_grid, x)
-    SpinOrbit_splitting_on_sim_grid = convert_grid(SpinOrbit_splitting, x_material_grid, x)
+    crystal_splitting_on_sim_grid   = convert_grid(crystal_splitting, x_material_grid, x)
+    spin_orbit_splitting_on_sim_grid = convert_grid(spin_orbit_splitting, x_material_grid, x)
 
     # obtain Kane parameter P_1
     if KaneParameter_fromOutput:
@@ -343,16 +331,15 @@ for sweep_subfolder, combination in sweep_output_infodict.items():
     elif not user_defined_Kane_EP1:
         raise RuntimeError('Please specify Kane energy parameter [eV] or set KaneParameter_fromOutput = True.')
     else:
-        # TODO ??
-        P1 = s.scale1ToNano * np.sqrt(hbar**2 * (eV_in_J * user_defined_Kane_EP1) / 2 / s.electron_mass)   # user-defined Kane parameter. Units translated to [J nm]
+        P1 = scale1ToNano * np.sqrt(hbar**2 * (eV_in_J * user_defined_Kane_EP1) / 2 / electron_mass_in_kg)   # user-defined Kane parameter. Units translated to [J nm]
         Kane_P1_on_sim_grid = np.array([P1] * len(x))
 
 
     # bandedge shift due to crystal splitting and spin-orbit coupling
-    SpinOrbit_splitting_perp_on_sim_grid = SpinOrbit_splitting_on_sim_grid   # nextnano database assumes delta_perp = delta_para
-    bandshift_HH = Crystal_splitting_on_sim_grid + SpinOrbit_splitting_on_sim_grid
-    p = (Crystal_splitting_on_sim_grid - SpinOrbit_splitting_on_sim_grid) / 2.
-    bandshift_LH = p + np.sqrt(p**2 + 2*SpinOrbit_splitting_perp_on_sim_grid**2)
+    spin_orbit_splitting_perp_on_sim_grid = spin_orbit_splitting_on_sim_grid   # nextnano database assumes delta_perp = delta_para
+    bandshift_HH = crystal_splitting_on_sim_grid + spin_orbit_splitting_on_sim_grid
+    p = (crystal_splitting_on_sim_grid - spin_orbit_splitting_on_sim_grid) / 2.
+    bandshift_LH = p + np.sqrt(p**2 + 2*spin_orbit_splitting_perp_on_sim_grid**2)
 
 
     # calculate dipole_moment = <Z|z|S> = P1/Eg
@@ -367,7 +354,7 @@ for sweep_subfolder, combination in sweep_output_infodict.items():
 
 
     # for single band, coefficient beta' is needed
-    beta_squared = bandshift_LH**2 / (bandshift_LH**2 + 2*SpinOrbit_splitting_on_sim_grid**2)
+    beta_squared = bandshift_LH**2 / (bandshift_LH**2 + 2*spin_orbit_splitting_on_sim_grid**2)
 
 
     # remove the grid points within contacts, and
@@ -376,7 +363,7 @@ for sweep_subfolder, combination in sweep_output_infodict.items():
     indices_in_contacts = [ i for i in range(len(x)) if bandgap_gamma[i] == 0 ]
 
     dipole_moment_cut = np.delete(dipole_moment, indices_in_contacts)
-    PotentialGrad_cut = np.delete(PotentialGrad, indices_in_contacts)
+    PotentialGrad_cut = np.delete(potential_grad, indices_in_contacts)
     x_cut             = np.delete(x, indices_in_contacts)
     beta_squared_cut  = np.delete(beta_squared, indices_in_contacts)   # for single band
     print(f'Integration performed from x = {x_cut[0]} to {x_cut[-1]}')
@@ -430,7 +417,7 @@ for sweep_subfolder, combination in sweep_output_infodict.items():
         integrand = np.zeros((num_ev_CB, num_ev_VB, len(x_cut)), dtype = np.complex128)  # create a (num_ev_CB * num_ev_VB) matrix with position-dependent elements
         for i in range(num_ev_CB):
             for j in range(num_ev_VB):
-                integrand[i, j, ] = np.sqrt(beta_squared_cut) * dipole_moment_cut * amplitude_VB_SO_cut[j, ] * amplitude_Gamma_cut[i, ] * elemenery_charge_in_C * PotentialGrad_cut
+                integrand[i, j, ] = np.sqrt(beta_squared_cut) * dipole_moment_cut * amplitude_VB_SO_cut[j, ] * amplitude_Gamma_cut[i, ] * elementary_charge_in_C * PotentialGrad_cut
 
         # integrate over position
         M = simps(integrand, x_cut)   # [J/nm] integrated over [nm] gives [J]
@@ -530,21 +517,39 @@ if CALCULATE_REDUCED_MASS_FROM_OUTPUT:
     print('\nPLOT: reduced mass\n')
 
 # plot material parameters & dipole moment (independent of bias)
-fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16,12), sharex=True)
 ax1.plot(x, bandgap_gamma / eV_in_J , label='bandgap c-hh [eV]')
-ax1.plot(x, Crystal_splitting_on_sim_grid / eV_in_J, label='crystal splitting [eV]')
-ax1.plot(x, SpinOrbit_splitting_on_sim_grid / eV_in_J, label='spin-orbit splitting [eV]')
-if KaneParameter_fromOutput:
-    ax1.plot(x, Kane_P1_on_sim_grid / eV_in_J, label='Kane parameter P1 [eV nm]')
-ax1.set_xlabel(f"{df_potential.coords['x'].label}")
-ax1.set_title('Position-dependent material parameters')
-ax1.legend(bbox_to_anchor=(1,1), loc='upper left')
+ax1.set_ylabel('Energy bandgap c-hh (eV)')
+ax2.plot(x, crystal_splitting_on_sim_grid / eV_in_J, label='crystal splitting')
+ax2.plot(x, spin_orbit_splitting_on_sim_grid / eV_in_J, label='spin-orbit splitting')
+ax2.set_ylabel('Energy (eV)')
 
-ax2.plot(x_cut, dipole_moment_cut)
-ax2.set_xlabel(f"{df_potential.coords['x'].label}")
-ax2.set_ylabel('(nm)')
-ax2.set_title('dipole matrix element <Z|z|S>')
-fig.tight_layout()
+# Add an inset axis to ax2
+inset_ax = inset_axes(ax2, width="30%", height="30%", loc='center left', bbox_to_anchor=(0.1, 0.1, 1, 1), bbox_transform=ax2.transAxes)  # Adjust size and location
+inset_ax.plot(x, crystal_splitting_on_sim_grid / eV_in_J, label='crystal splitting')
+inset_ax.plot(x, spin_orbit_splitting_on_sim_grid / eV_in_J, label='spin-orbit splitting')
+inset_ax.set_xlim(-1, 3)
+inset_ax.set_ylim(0.005, 0.01)
+# smaller ticklabels
+inset_ax.tick_params(axis='both', which='major', labelsize=8)
+
+if KaneParameter_fromOutput:
+    ax3.plot(x, Kane_P1_on_sim_grid / eV_in_J, label='Kane parameter P1 [eV nm]')
+ax3.set_ylabel('Kane parameter P1 (eV$\cdot$nm)')
+ax3.set_ylabel('Kane parameter P1 (eV nm)')
+
+for ax in (ax1, ax2, ax3, ax4):
+    ax.set_xlabel(f"{df_potential.coords['x'].label}")
+ax4.plot(x_cut, dipole_moment_cut)
+ax4.set_xlabel(f"{df_potential.coords['x'].label}")
+ax4.set_ylabel('dipole matrix element <Z|z|S> (nm)')
+
+ax2.legend()
+
+fig.savefig(os.path.join(sweep_output_directory,'MaterialParameters_and_DipoleMoment' + fig_format))  # save plot
+
+
+# fig.tight_layout()
 print('\nPLOT: bandgap, position-dependent material parameters and dipole moment\n')
 
 
@@ -576,4 +581,5 @@ print('nextnanopy DONE.')
 print(f'Run Time ({software} and nextnanopy): {runtime_sec:.3f} [sec]  ({runtime_min:.3f} [min])' )
 print('-------------------------------------------------------------')
 
+fig_el.tight_layout()
 plt.show()
