@@ -1,21 +1,16 @@
 """
 Created: 2022/06/09
-Updated: 2023/04/27
+Updated: 2026/03/11
 
 This Python script computes interband tunneling current through a highly-doped nitride heterojunction.
 [nextnano++ tutorial]
-https://www.nextnano.de/manual/nn_products/nextnanoplus/tutorials/tricks_and_hacks/1D_interband_tunneling_in_nitride_junction.html
+https://www.nextnano.com/docu/nextnanoplus/latest/tutorials/1D_interband_tunneling_in_nitride_junction.html
 
 The usage of this script is explained in
 'InterbandTunneling_Duboz2019_doc.ipynb'.
 
 For the equations and approximations, please refer to the the documentation
 'InterbandTunneling_Duboz2019_formulation.pdf'.
-
-This scripts uses the shortcut methods in Chikuwaq/nextnanopy-wrapper:
-https://github.com/Chikuwaq/nextnanopy-wrapper
-
-@author: takuma.sato@nextnano.com
 """
 
 # Python libraries
