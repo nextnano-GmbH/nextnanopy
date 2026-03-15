@@ -29,12 +29,9 @@ def command(
     cmd = defaults.get_command(product)
 
     # warn if output path might be too long
-    tooLongPath = (product in ["nextnano3", "nextnano++"]) and len(
-        outputdirectory
-    ) + 80 > 260  # TODO: how long is the minimal path appended by nn3/nnp simulations?
-    tooLongPathNEGF = (product in ["nextnano.NEGF", "nextnano.NEGF_classic"]) and len(
-        outputdirectory
-    ) + 80 > 260
+    outdir_len = len(str(outputdirectory))
+    tooLongPath = (product in ["nextnano3", "nextnano++"]) and outdir_len + 80 > 260  # TODO: how long is the minimal path appended by nn3/nnp simulations?
+    tooLongPathNEGF = (product in ["nextnano.NEGF", "nextnano.NEGF_classic"]) and outdir_len + 80 > 260
     if tooLongPath or tooLongPathNEGF:
         warnings.warn(
             "The output path might be too long on Windows 10 (maximum 260 characters). Consider abbreviating your input file name and/or sweep variables..."
