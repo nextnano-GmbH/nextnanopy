@@ -824,7 +824,7 @@ class TestSweep(unittest.TestCase):
             exceptions=["only_variables.in"],
         )
 
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         sweep = Sweep({"float": [1, 2], "str": ["test1", "test2"]}, fullpath)
         sweep.save_sweep(temp=True)
 
@@ -833,9 +833,7 @@ class TestSweep(unittest.TestCase):
         ]
         self.assertEqual(len(files_with_names), 1)
         self.assertFalse(
-            os.path.isfile(
-                os.path.join(folder_nnp, "only_variables__float_2_str_test1_.in")
-            )
+            (folder_nnp / "only_variables__float_2_str_test1_.in").is_file()
         )
 
 
