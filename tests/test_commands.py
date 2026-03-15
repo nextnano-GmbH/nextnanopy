@@ -1,26 +1,25 @@
 import unittest
+from pathlib import Path
 from nextnanopy import commands
 from nextnanopy.utils.formatting import _path, _bool
 
-import os
-
-folder_nnp = os.path.join("tests", "datafiles", "nextnano++")
-folder_nn3 = os.path.join("tests", "datafiles", "nextnano3")
-folder_negf = os.path.join("tests", "datafiles", "nextnano.NEGF")
-folder_msb = os.path.join("tests", "datafiles", "nextnano.MSB")
+folder_nnp = Path("tests") / "datafiles" / "nextnano++"
+folder_nn3 = Path("tests") / "datafiles" / "nextnano3"
+folder_negf = Path("tests") / "datafiles" / "nextnano.NEGF"
+folder_msb = Path("tests") / "datafiles" / "nextnano.MSB"
 
 
 class TestCommands(unittest.TestCase):
 
     def test_commands_nnp(self):
         self.maxDiff = None
-        inputfile = os.path.join(folder_nnp, "example.in")
-        exe = os.path.join("nextnano++", "bin 64bit", "nextnano++_Intel_64bit.exe")
+        inputfile = folder_nnp / "example.in"
+        exe = Path("nextnano++") / "bin 64bit" / "nextnano++_Intel_64bit.exe"
         runmode = "--resume"
         no_file_options = "--autosave --logfile"
-        license = os.path.join(r"nextnanopy\License", "License_nnp.lic")
-        database = os.path.join("nextnano++", "Syntax", "database_nnp.in")
-        outputdirectory = r"tests\datafiles"
+        license = Path("nextnanopy") / "License" / "License_nnp.lic"
+        database = Path("nextnano++") / "Syntax" / "database_nnp.in"
+        outputdirectory = Path("tests") / "datafiles"
         threads = 4
         cmd = f'"{exe}" {runmode} --license "{license}" --database "{database}" --threads {threads} --outputdirectory "{outputdirectory}" --noautooutdir {no_file_options} "{inputfile}"'
         kwargs = dict(
@@ -40,11 +39,11 @@ class TestCommands(unittest.TestCase):
 
     def test_commands_nn3(self):
         self.maxDiff = None
-        inputfile = os.path.join(folder_nn3, "example.in")
-        exe = os.path.join("nextnano++", "bin 64bit", "nextnano++_Intel_64bit.exe")
-        license = os.path.join(r"nextnanopy\License", "License_nnp.lic")
-        database = os.path.join("nextnano++", "Syntax", "database_nnp.in")
-        outputdirectory = r"tests\datafiles"
+        inputfile = folder_nn3 / "example.in"
+        exe = Path("nextnano++") / "bin 64bit" / "nextnano++_Intel_64bit.exe"
+        license = Path("nextnanopy") / "License" / "License_nnp.lic"
+        database = Path("nextnano++") / "Syntax" / "database_nnp.in"
+        outputdirectory = Path("tests") / "datafiles"
         threads = 4
         debuglevel = 0
         cancel = -1
@@ -70,11 +69,11 @@ class TestCommands(unittest.TestCase):
 
     def test_commands_negf_classic(self):
         self.maxDiff = None
-        inputfile = os.path.join(folder_negf, "example.xml")
-        exe = os.path.join("nextnano.NEGF", "nextnano.NEGF.exe")
-        license = os.path.join(r"License", "License_nnQCL.lic")
-        database = os.path.join("nextnano.NEGF", "Material_Database.xml")
-        outputdirectory = r"tests\datafiles"
+        inputfile = folder_negf / "example.xml"
+        exe = Path("nextnano.NEGF") / "nextnano.NEGF.exe"
+        license = Path("License") / "License_nnQCL.lic"
+        database = Path("nextnano.NEGF") / "Material_Database.xml"
+        outputdirectory = Path("tests") / "datafiles"
         threads = 4
         cmd = f'"{exe}" "{inputfile}" "{outputdirectory}" "{database}" "{license}" -threads {threads}'
         kwargs = dict(
@@ -96,21 +95,12 @@ class TestCommands(unittest.TestCase):
         from nextnanopy.msb.defaults import command_msb
 
         self.maxDiff = None
-        inputfile = os.path.join(folder_msb, "example.msb")
-        exe = os.path.join("nextnano.MSB", "nextnano.MSB.exe")
-        license = os.path.join(r"License", "License_nnMSB.lic")
-        database = os.path.join("nextnano.MSB", "Materials.xml")
-        outputdirectory = r"tests\datafiles"
+        inputfile = folder_msb / "example.msb"
+        exe = Path("nextnano.MSB") / "nextnano.MSB.exe"
+        license = Path("License") / "License_nnMSB.lic"
+        database = Path("nextnano.MSB") / "Materials.xml"
+        outputdirectory = Path("tests") / "datafiles"
         threads = 1
-
-        kwargs = dict(
-            inputfile=inputfile,
-            exe=exe,
-            license=license,
-            database=database,
-            outputdirectory=outputdirectory,
-            threads=1,
-        )
 
         cmd = f'"{exe}" --license "{license}" --database "{database}" --threads {threads} --outputdirectory "{outputdirectory}" --noautooutdir "{inputfile}"'
         kwargs = dict(
@@ -144,7 +134,7 @@ class TestCommands(unittest.TestCase):
         self.assertRaises(
             ValueError,
             commands.execute,
-            inputfile=r"test\datafiles",
+            inputfile=Path("test") / "datafiles",
             exe="",
             license="",
             database="",

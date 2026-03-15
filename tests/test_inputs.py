@@ -1,28 +1,30 @@
 import unittest
 import os
-from nextnanopy.inputs import InputFile, Sweep
 import tempfile
 from pathlib import Path
-def delete_files(start, directory=os.getcwd(), exceptions=None):
-    for fname in os.listdir(directory):
-        if fname.startswith(start):
+from nextnanopy.inputs import InputFile, Sweep
+
+
+def delete_files(start, directory=Path.cwd(), exceptions=None):
+    for fpath in Path(directory).iterdir():
+        if fpath.name.startswith(start):
             if exceptions:
-                if fname in exceptions:
+                if fpath.name in exceptions:
                     continue
                 else:
-                    os.remove(os.path.join(directory, fname))
+                    fpath.unlink()
             else:
-                os.remove(os.path.join(directory, fname))
+                fpath.unlink()
 
 
-folder_nnp = os.path.join("tests", "datafiles", "nextnano++")
-folder_nn3 = os.path.join("tests", "datafiles", "nextnano3")
-folder_negf = os.path.join("tests", "datafiles", "nextnano.NEGF")
+folder_nnp = Path("tests") / "datafiles" / "nextnano++"
+folder_nn3 = Path("tests") / "datafiles" / "nextnano3"
+folder_negf = Path("tests") / "datafiles" / "nextnano.NEGF"
 folder_msb = Path("tests") / "datafiles" / "nextnano.MSB"
 
 class Test_nnp(unittest.TestCase):
     def test_load(self):
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
 
         file = InputFile(fullpath)
         self.assertEqual(file.product, "nextnano++")
@@ -57,18 +59,18 @@ class Test_nnp(unittest.TestCase):
         self.assertEqual(file.variables["MAYUS"].comment, "")
         self.assertEqual(file.variables["MAYUS"].text, "$MAYUS = TEXT")
 
-        fullpath = os.path.join(folder_nnp, "virtual_file.in")
+        fullpath = folder_nnp / "virtual_file.in"
         self.assertRaises(FileNotFoundError, InputFile, fullpath)
 
     def test_get_variables(self):
-        fullpath = os.path.join(folder_nn3, "only_variables.in")
+        fullpath = folder_nn3 / "only_variables.in"
         file = InputFile(fullpath)
 
         self.assertEqual(file.variables["float"], file.get_variable("float"))
         self.assertRaises(KeyError, file.get_variable, name="new_variable")
 
     def test_set_variables(self):
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         file = InputFile(fullpath)
         file.set_variable(
             "float", 1e-5, "some comment", "some unit"
@@ -108,18 +110,18 @@ class Test_nnp(unittest.TestCase):
         self.assertRaises(KeyError, file.set_variable, name="new_variable")
 
     def test_fullpath(self):
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         file = InputFile(fullpath)
 
-        self.assertEqual(file.fullpath, fullpath)
+        self.assertEqual(Path(file.fullpath), fullpath)
         self.assertEqual(
-            file.save(file.fullpath, overwrite=False),
-            os.path.join(folder_nnp, "only_variables_0.in"),
+            Path(file.save(file.fullpath, overwrite=False)),
+            folder_nnp / "only_variables_0.in",
         )
-        os.remove(file.fullpath)
+        Path(file.fullpath).unlink()
 
     def test_config(self):
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         file = InputFile(fullpath)
         from nextnanopy import config
 
@@ -127,65 +129,56 @@ class Test_nnp(unittest.TestCase):
             self.assertEqual(file.default_command_args[key], value)
 
     def test_text(self):
-        fullpath_onlyvar = os.path.join(folder_nnp, "only_variables.in")
-        fullpath_example = os.path.join(folder_nnp, "example.in")
+        fullpath_onlyvar = folder_nnp / "only_variables.in"
+        fullpath_example = folder_nnp / "example.in"
         file = InputFile(fullpath_onlyvar)
         text = file.text
 
         new_file = InputFile(fullpath_example)
-        # new_file = InputFile()
-        # self.assertEqual(new_file.product, 'not valid')
-        # self.assertEqual(new_file.fullpath, None)
-        # self.assertEqual(new_file.text, '')
-        # self.assertEqual(new_file.raw_lines, [])
-
         new_file.text = text
         self.assertEqual(new_file.product, "nextnano++")
-        # self.assertEqual(new_file.fullpath, None)
         self.assertEqual(new_file.text, text)
         self.assertEqual(new_file.lines, file.lines)
         self.assertEqual(new_file.variables["MAYUS"].name, "MAYUS")
         self.assertEqual(new_file.variables["MAYUS"].value, "TEXT")
         self.assertEqual(new_file.variables["MAYUS"].comment, "")
         self.assertEqual(new_file.variables["MAYUS"].text, "$MAYUS = TEXT")
-        # self.assertRaises(ValueError, new_file.save)
         self.assertEqual(
-            new_file.save(file.fullpath, overwrite=False),
-            os.path.join(folder_nnp, "only_variables_0.in"),
+            Path(new_file.save(file.fullpath, overwrite=False)),
+            folder_nnp / "only_variables_0.in",
         )
-        os.remove(new_file.fullpath)
+        Path(new_file.fullpath).unlink()
 
     def test_set_and_save(self):
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         file = InputFile(fullpath)
         file.set_variable(name="float", value=0.4)
         self.assertAlmostEqual(file.variables["float"].value, 0.4)
 
-        self.addCleanup(os.remove, os.path.join(folder_nnp, "only_variables_0.in"))
+        self.addCleanup((folder_nnp / "only_variables_0.in").unlink)
         file.save()
-        self.assertTrue(os.path.isfile(os.path.join(folder_nnp, "only_variables_0.in")))
+        self.assertTrue((folder_nnp / "only_variables_0.in").is_file())
 
     def test_save_temp(self):
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         file = InputFile(fullpath)
         file.save(temp=True)
-        self.assertTrue(os.path.isfile(file.fullpath))
+        self.assertTrue(Path(file.fullpath).is_file())
         try:
-            self.assertTrue(os.path.isfile(file.fullpath))
+            self.assertTrue(Path(file.fullpath).is_file())
             # Check that the file is in the system temp directory
-            temp_dir = os.path.abspath(tempfile.gettempdir())
-            file_dir = os.path.abspath(os.path.dirname(file.fullpath))
-            self.assertTrue(file_dir.startswith(temp_dir))
+            temp_dir = Path(tempfile.gettempdir()).resolve()
+            file_dir = Path(file.fullpath).resolve().parent
+            self.assertTrue(str(file_dir).startswith(str(temp_dir)))
         finally:
-            if os.path.exists(file.fullpath):
-                os.remove(file.fullpath)
+            if Path(file.fullpath).exists():
+                Path(file.fullpath).unlink()
 
     def test_same_dir_saving(self):
-        current_directory = os.getcwd()
+        current_directory = Path.cwd()
         self.addCleanup(os.chdir, current_directory)
 
-        nnp_datafile_dir = os.path.join(folder_nnp)
-        os.chdir(nnp_datafile_dir)
+        os.chdir(folder_nnp)
 
         path = "only_variables.in"
         file = InputFile(path)
@@ -198,12 +191,12 @@ class Test_nnp(unittest.TestCase):
             exceptions=["only_variables.in"],
         )
         file.save()
-        self.assertTrue(os.path.isfile("only_variables_0.in"))
+        self.assertTrue(Path("only_variables_0.in").is_file())
 
     ###content tests
 
     def test_content_get(self):
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         file = InputFile(fullpath)
 
         self.assertIsNotNone(file.content)
@@ -211,7 +204,7 @@ class Test_nnp(unittest.TestCase):
         self.assertEqual(file.content[-1].name, "global")
 
     def test_content_set(self):
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         file = InputFile(fullpath)
 
         file.content[0] = "$DUMMY = 1"
@@ -222,7 +215,7 @@ class Test_nnp(unittest.TestCase):
 
 class Test_nn3(unittest.TestCase):
     def test_load(self):
-        fullpath = os.path.join(folder_nn3, "only_variables.in")
+        fullpath = folder_nn3 / "only_variables.in"
 
         file = InputFile(fullpath)
         self.assertEqual(file.product, "nextnano3")
@@ -253,18 +246,18 @@ class Test_nn3(unittest.TestCase):
         self.assertEqual(file.variables["MAYUS"].value, "TEXT")
         self.assertEqual(file.variables["MAYUS"].comment, "")
 
-        fullpath = os.path.join(folder_nn3, "virtual_file.in")
+        fullpath = folder_nn3 / "virtual_file.in"
         self.assertRaises(FileNotFoundError, InputFile, fullpath)
 
     def test_get_variables(self):
-        fullpath = os.path.join(folder_nn3, "only_variables.in")
+        fullpath = folder_nn3 / "only_variables.in"
         file = InputFile(fullpath)
 
         self.assertEqual(file.variables["float"], file.get_variable("float"))
         self.assertRaises(KeyError, file.get_variable, name="new_variable")
 
     def test_set_variables(self):
-        fullpath = os.path.join(folder_nn3, "only_variables.in")
+        fullpath = folder_nn3 / "only_variables.in"
         file = InputFile(fullpath)
         file.set_variable("float", 1e-5, "some comment")
 
@@ -301,18 +294,18 @@ class Test_nn3(unittest.TestCase):
         self.assertRaises(KeyError, file.set_variable, name="new_variable")
 
     def test_fullpath(self):
-        fullpath = os.path.join(folder_nn3, "only_variables.in")
+        fullpath = folder_nn3 / "only_variables.in"
         file = InputFile(fullpath)
 
-        self.assertEqual(file.fullpath, fullpath)
+        self.assertEqual(Path(file.fullpath), fullpath)
         self.assertEqual(
-            file.save(file.fullpath, overwrite=False),
-            os.path.join(folder_nn3, "only_variables_0.in"),
+            Path(file.save(file.fullpath, overwrite=False)),
+            folder_nn3 / "only_variables_0.in",
         )
-        os.remove(file.fullpath)
+        Path(file.fullpath).unlink()
 
     def test_config(self):
-        fullpath = os.path.join(folder_nn3, "only_variables.in")
+        fullpath = folder_nn3 / "only_variables.in"
         file = InputFile(fullpath)
         from nextnanopy import config
 
@@ -320,77 +313,69 @@ class Test_nn3(unittest.TestCase):
             self.assertEqual(file.default_command_args[key], value)
 
     def test_save(self):
-        fullpath = os.path.join(folder_nn3, "only_variables.in")
+        fullpath = folder_nn3 / "only_variables.in"
         file = InputFile(fullpath)
-        new_folder = os.path.join(folder_nn3, "temp")
-        new_file = os.path.join(new_folder, "example_copy.in")
+        new_folder = folder_nn3 / "temp"
+        new_file = new_folder / "example_copy.in"
         self.assertRaises(
             FileNotFoundError, file.save, new_file, overwrite=True, automkdir=False
         )
-        self.assertEqual(file.save(new_file, overwrite=True, automkdir=True), new_file)
-        os.remove(file.fullpath)
-        os.rmdir(new_folder)
+        self.assertEqual(Path(file.save(new_file, overwrite=True, automkdir=True)), new_file)
+        Path(file.fullpath).unlink()
+        new_folder.rmdir()
 
     def test_save_temp(self):
-        fullpath = os.path.join(folder_nn3, "only_variables.in")
+        fullpath = folder_nn3 / "only_variables.in"
         file = InputFile(fullpath)
         file.save(temp=True)
-        self.assertTrue(os.path.isfile(file.fullpath))
+        self.assertTrue(Path(file.fullpath).is_file())
         try:
-            self.assertTrue(os.path.isfile(file.fullpath))
+            self.assertTrue(Path(file.fullpath).is_file())
             # Check that the file is in the system temp directory
-            temp_dir = os.path.abspath(tempfile.gettempdir())
-            file_dir = os.path.abspath(os.path.dirname(file.fullpath))
-            self.assertTrue(file_dir.startswith(temp_dir))
+            temp_dir = Path(tempfile.gettempdir()).resolve()
+            file_dir = Path(file.fullpath).resolve().parent
+            self.assertTrue(str(file_dir).startswith(str(temp_dir)))
         finally:
-            if os.path.exists(file.fullpath):
-                os.remove(file.fullpath)
-    
+            if Path(file.fullpath).exists():
+                Path(file.fullpath).unlink()
+
     def test_text(self):
-        fullpath_onlyvar = os.path.join(folder_nn3, "only_variables.in")
-        fullpath_example = os.path.join(folder_nn3, "example.in")
+        fullpath_onlyvar = folder_nn3 / "only_variables.in"
+        fullpath_example = folder_nn3 / "example.in"
         file = InputFile(fullpath_onlyvar)
         text = file.text
 
         new_file = InputFile(fullpath_example)
-        # self.assertEqual(new_file.product, 'not valid')
-        # self.assertEqual(new_file.fullpath, None)
-        # self.assertEqual(new_file.text, '')
-        # self.assertEqual(new_file.raw_lines, [])
-
         new_file.text = text
 
         self.assertEqual(new_file.product, "nextnano3")
-        # self.assertEqual(new_file.fullpath, None)
         self.assertEqual(new_file.text, text)
         self.assertEqual(new_file.lines, file.lines)
         self.assertEqual(new_file.variables["MAYUS"].name, "MAYUS")
         self.assertEqual(new_file.variables["MAYUS"].value, "TEXT")
         self.assertEqual(new_file.variables["MAYUS"].comment, "")
         self.assertEqual(new_file.variables["MAYUS"].text, "%MAYUS = TEXT")
-        # self.assertRaises(ValueError, new_file.save)
         self.assertEqual(
-            new_file.save(file.fullpath, overwrite=False),
-            os.path.join(folder_nn3, "only_variables_0.in"),
+            Path(new_file.save(file.fullpath, overwrite=False)),
+            folder_nn3 / "only_variables_0.in",
         )
-        os.remove(new_file.fullpath)
+        Path(new_file.fullpath).unlink()
 
     def test_set_and_save(self):
-        fullpath = os.path.join(folder_nn3, "only_variables.in")
+        fullpath = folder_nn3 / "only_variables.in"
         file = InputFile(fullpath)
         file.set_variable(name="float", value=0.4)
         self.assertAlmostEqual(file.variables["float"].value, 0.4)
 
-        self.addCleanup(os.remove, os.path.join(folder_nn3, "only_variables_0.in"))
+        self.addCleanup((folder_nn3 / "only_variables_0.in").unlink)
         file.save()
-        self.assertTrue(os.path.isfile(os.path.join(folder_nn3, "only_variables_0.in")))
+        self.assertTrue((folder_nn3 / "only_variables_0.in").is_file())
 
     def test_same_dir(self):
-        current_directory = os.getcwd()
+        current_directory = Path.cwd()
         self.addCleanup(os.chdir, current_directory)
 
-        nn3_datafile_dir = os.path.join(folder_nn3)
-        os.chdir(nn3_datafile_dir)
+        os.chdir(folder_nn3)
 
         path = "only_variables.in"
         file = InputFile(path)
@@ -403,10 +388,10 @@ class Test_nn3(unittest.TestCase):
             exceptions=["only_variables.in"],
         )
         file.save()
-        self.assertTrue(os.path.isfile("only_variables_0.in"))
+        self.assertTrue(Path("only_variables_0.in").is_file())
 
     def test_content(self):
-        fullpath = os.path.join(folder_nn3, "only_variables.in")
+        fullpath = folder_nn3 / "only_variables.in"
         file = InputFile(fullpath)
 
         self.assertIsNone(file.content)
@@ -414,7 +399,7 @@ class Test_nn3(unittest.TestCase):
 
 class Test_negf_classic(unittest.TestCase):
     def test_load(self):
-        fullpath = os.path.join(folder_negf, "example.xml")
+        fullpath = folder_negf / "example.xml"
         file = InputFile(fullpath)
 
         self.assertEqual(file.product, "nextnano.NEGF_classic")
@@ -436,11 +421,11 @@ class Test_negf_classic(unittest.TestCase):
 
         self.assertEqual(file.variables["ref_var"].value, "$(1-variable1)")
 
-        fullpath = os.path.join(folder_negf, "virtual_file.xml")
+        fullpath = folder_negf / "virtual_file.xml"
         self.assertRaises(FileNotFoundError, InputFile, fullpath)
 
     def test_get_variables(self):
-        fullpath = os.path.join(folder_negf, "example.xml")
+        fullpath = folder_negf / "example.xml"
         file = InputFile(fullpath)
 
         self.assertEqual(file.variables["variable1"], file.get_variable("variable1"))
@@ -448,14 +433,13 @@ class Test_negf_classic(unittest.TestCase):
         self.assertRaises(KeyError, file.get_variable, name="new_variable")
 
     def test_set_variables(self):
-        fullpath = os.path.join(folder_negf, "example.xml")
+        fullpath = folder_negf / "example.xml"
         file = InputFile(fullpath)
 
         file.set_variable("variable1", 0.137, "test comment", "test unit^2")
         self.assertEqual(file.variables["variable1"].value, float(0.137))
         self.assertEqual(file.variables["variable1"].comment, "test comment")
         self.assertEqual(file.variables["variable1"].unit, "test unit^2")
-        # self.assertEqual(file.lines[19], '<Name Comment="Some comment">$variable1</Name>')
 
         file.set_variable("text_var", "string variable test")
         self.assertEqual(file.variables["text_var"].value, "string variable test")
@@ -466,18 +450,18 @@ class Test_negf_classic(unittest.TestCase):
         self.assertRaises(KeyError, file.set_variable, name="new_variable")
 
     def test_fullpath(self):
-        fullpath = os.path.join(folder_negf, "example.xml")
+        fullpath = folder_negf / "example.xml"
         file = InputFile(fullpath)
 
-        self.assertEqual(file.fullpath, fullpath)
+        self.assertEqual(Path(file.fullpath), fullpath)
         self.assertEqual(
-            file.save(file.fullpath, overwrite=False),
-            os.path.join(folder_negf, "example_0.xml"),
+            Path(file.save(file.fullpath, overwrite=False)),
+            folder_negf / "example_0.xml",
         )
-        os.remove(file.fullpath)
+        Path(file.fullpath).unlink()
 
     def test_config(self):
-        fullpath = os.path.join(folder_negf, "example.xml")
+        fullpath = folder_negf / "example.xml"
         file = InputFile(fullpath)
         from nextnanopy import config
 
@@ -485,30 +469,30 @@ class Test_negf_classic(unittest.TestCase):
             self.assertEqual(file.default_command_args[key], value)
 
     def test_save(self):
-        fullpath = os.path.join(folder_negf, "example.xml")
+        fullpath = folder_negf / "example.xml"
         file = InputFile(fullpath)
 
-        new_folder = os.path.join(folder_negf, "temp")
-        new_file = os.path.join(new_folder, "example_copy.in")
+        new_folder = folder_negf / "temp"
+        new_file = new_folder / "example_copy.in"
         self.assertRaises(
             FileNotFoundError, file.save, new_file, overwrite=True, automkdir=False
         )
-        self.assertEqual(file.save(new_file, overwrite=True, automkdir=True), new_file)
-        os.remove(file.fullpath)
-        os.rmdir(new_folder)
+        self.assertEqual(Path(file.save(new_file, overwrite=True, automkdir=True)), new_file)
+        Path(file.fullpath).unlink()
+        new_folder.rmdir()
 
     def test_set_and_save(self):
-        fullpath = os.path.join(folder_negf, "example.xml")
+        fullpath = folder_negf / "example.xml"
         file = InputFile(fullpath)
         file.set_variable(name="variable1", value=0.4)
         self.assertAlmostEqual(file.variables["variable1"].value, 0.4)
 
-        self.addCleanup(os.remove, os.path.join(folder_negf, "example_0.xml"))
+        self.addCleanup((folder_negf / "example_0.xml").unlink)
         file.save()
-        self.assertTrue(os.path.isfile(os.path.join(folder_negf, "example_0.xml")))
+        self.assertTrue((folder_negf / "example_0.xml").is_file())
 
     def test_content(self):
-        fullpath = os.path.join(folder_negf, "example.xml")
+        fullpath = folder_negf / "example.xml"
         file = InputFile(fullpath)
 
         self.assertIsNone(file.content)
@@ -517,7 +501,7 @@ class Test_negf_classic(unittest.TestCase):
 class Test_negf(unittest.TestCase):
     # TODO: implement test for NEGF++ input file
     def test_load(self):
-        fullpath = os.path.join(folder_negf, "Minimal_InputFile.negf")
+        fullpath = folder_negf / "Minimal_InputFile.negf"
 
         file = InputFile(fullpath)
         self.assertEqual(file.product, "nextnano.NEGF")
@@ -531,11 +515,11 @@ class Test_negf(unittest.TestCase):
             file.variables["alloyComposition"].comment, "alloy composition"
         )
 
-        fullpath = os.path.join(folder_nnp, "virtual_file.in")
+        fullpath = folder_nnp / "virtual_file.in"
         self.assertRaises(FileNotFoundError, InputFile, fullpath)
 
     def test_get_variables(self):
-        fullpath = os.path.join(folder_negf, "Minimal_InputFile.negf")
+        fullpath = folder_negf / "Minimal_InputFile.negf"
         file = InputFile(fullpath)
 
         self.assertEqual(
@@ -544,7 +528,7 @@ class Test_negf(unittest.TestCase):
         self.assertRaises(KeyError, file.get_variable, name="new_variable")
 
     def test_set_variables(self):
-        fullpath = os.path.join(folder_negf, "Minimal_InputFile.negf")
+        fullpath = folder_negf / "Minimal_InputFile.negf"
         file = InputFile(fullpath)
         file.set_variable(
             "alloyComposition", 1e-5, "some comment", "some unit"
@@ -592,66 +576,36 @@ class Test_negf(unittest.TestCase):
         self.assertRaises(KeyError, file.set_variable, name="new_variable")
 
     def test_fullpath(self):
-        fullpath = os.path.join(folder_negf, "Minimal_InputFile.negf")
+        fullpath = folder_negf / "Minimal_InputFile.negf"
         file = InputFile(fullpath)
 
-        self.assertEqual(file.fullpath, fullpath)
+        self.assertEqual(Path(file.fullpath), fullpath)
         self.assertEqual(
-            file.save(file.fullpath, overwrite=False),
-            os.path.join(folder_negf, "Minimal_InputFile_0.negf"),
+            Path(file.save(file.fullpath, overwrite=False)),
+            folder_negf / "Minimal_InputFile_0.negf",
         )
-        os.remove(file.fullpath)
+        Path(file.fullpath).unlink()
 
     def test_config(self):
-        fullpath = os.path.join(folder_negf, "Minimal_InputFile.negf")
+        fullpath = folder_negf / "Minimal_InputFile.negf"
         file = InputFile(fullpath)
         from nextnanopy import config
 
         for key, value in config.config["nextnano.NEGF"].items():
             self.assertEqual(file.default_command_args[key], value)
 
-    # def test_text(self):
-    #     fullpath = os.path.join(folder_nnp, 'only_variables.in')
-    #
-    #     file = InputFile(fullpath)
-    #     text = file.text
-    #
-    #     new_file = InputFile()
-    #     self.assertEqual(new_file.product, 'not valid')
-    #     self.assertEqual(new_file.fullpath, None)
-    #     self.assertEqual(new_file.text, '')
-    #     self.assertEqual(new_file.raw_lines, [])
-    #
-    #     new_file.text = text
-    #     self.assertEqual(new_file.product, 'nextnano++')
-    #     self.assertEqual(new_file.fullpath, None)
-    #     self.assertEqual(new_file.text, text)
-    #     self.assertEqual(new_file.lines, file.lines)
-    #     self.assertEqual(new_file.variables['MAYUS'].name, 'MAYUS')
-    #     self.assertEqual(new_file.variables['MAYUS'].value, 'TEXT')
-    #     self.assertEqual(new_file.variables['MAYUS'].comment, '')
-    #     self.assertEqual(new_file.variables['MAYUS'].text, '$MAYUS = TEXT')
-    #     self.assertRaises(ValueError, new_file.save)
-    #     self.assertEqual(new_file.save(file.fullpath, overwrite=False),
-    #                      os.path.join(folder_nnp, 'only_variables_0.in'))
-    #     os.remove(new_file.fullpath)
-
     def test_set_and_save(self):
-        fullpath = os.path.join(folder_negf, "Minimal_InputFile.negf")
+        fullpath = folder_negf / "Minimal_InputFile.negf"
         file = InputFile(fullpath)
         file.set_variable(name="alloyComposition", value=0.4)
         self.assertAlmostEqual(file.variables["alloyComposition"].value, 0.4)
 
-        self.addCleanup(
-            os.remove, os.path.join(folder_negf, "Minimal_InputFile_0.negf")
-        )
+        self.addCleanup((folder_negf / "Minimal_InputFile_0.negf").unlink)
         file.save()
-        self.assertTrue(
-            os.path.isfile(os.path.join(folder_negf, "Minimal_InputFile_0.negf"))
-        )
+        self.assertTrue((folder_negf / "Minimal_InputFile_0.negf").is_file())
 
     def test_same_dir_saving(self):
-        current_directory = os.getcwd()
+        current_directory = Path.cwd()
         self.addCleanup(os.chdir, current_directory)
 
         os.chdir(folder_negf)
@@ -667,32 +621,12 @@ class Test_negf(unittest.TestCase):
             exceptions=["Minimal_InputFile.negf"],
         )
         file.save()
-        self.assertTrue(os.path.isfile("Minimal_InputFile_0.negf"))
+        self.assertTrue(Path("Minimal_InputFile_0.negf").is_file())
 
-    ###content tests
-
-    # def test_content_get(self): # LATER also check this
-    #     fullpath = os.path.join(folder_nnp, 'only_variables.in')
-    #     file = InputFile(fullpath)
-    #
-    #
-    #     self.assertIsNotNone(file.content)
-    #     self.assertEqual(file.content[0],'$float = 0.0 ')
-    #     self.assertEqual(file.content[-1].name, 'global')
-    #
-    # def test_content_set(self):
-    #     fullpath = os.path.join(folder_nnp, 'only_variables.in')
-    #     file = InputFile(fullpath)
-    #
-    #
-    #     file.content[0] = '$DUMMY = 1'
-    #     self.assertEqual(file.content[0],'$DUMMY = 1')
-    #     file.content['_entry_0'] = 'DUMMY LINE'
-    #     self.assertEqual(file.content[0], 'DUMMY LINE')
 
 class Test_msb(unittest.TestCase):
     def test_load(self):
-        fullpath = Path(folder_msb) / "example.msb"
+        fullpath = folder_msb / "example.msb"
 
         input_file = InputFile(fullpath)
         print(input_file)
@@ -701,11 +635,11 @@ class Test_msb(unittest.TestCase):
         self.assertEqual(input_file.product, "nextnano.MSB")
         self.assertEqual(len(input_file.variables.keys()), 1)
 
-        fullpath = Path(folder_msb) / "virtual_file.msb"
+        fullpath = folder_msb / "virtual_file.msb"
         self.assertRaises(FileNotFoundError, InputFile, fullpath)
 
     def get_variables(self):
-        fullpath = Path(folder_msb) / "example.msb"
+        fullpath = folder_msb / "example.msb"
         input_file = InputFile(fullpath)
 
         self.assertEqual(
@@ -720,71 +654,72 @@ class Test_msb(unittest.TestCase):
         )
 
     def test_set_variable(self):
-        fullpath = Path(folder_msb) / "example.msb"
+        fullpath = folder_msb / "example.msb"
         input_file = InputFile(fullpath)
 
         input_file.set_variable("Well", 0.2, "Updated well width", "nm")
         self.assertEqual(input_file.variables["Well"].value, 0.2)
         self.assertEqual(input_file.variables["Well"].comment, "Updated well width")
         self.assertEqual(input_file.variables["Well"].unit, "nm")
-    
+
     def test_set_and_save(self):
-        fullpath = Path(folder_msb) / "example.msb"
+        fullpath = folder_msb / "example.msb"
         input_file = InputFile(fullpath)
 
         input_file.set_variable(name="Well", value=0.25)
         self.assertAlmostEqual(input_file.variables["Well"].value, 0.25)
-        self.addCleanup(os.remove, Path(folder_msb) / "example_0.msb")
+        self.addCleanup((folder_msb / "example_0.msb").unlink)
         input_file.save()
-        self.assertTrue(os.path.isfile(Path(folder_msb) / "example_0.msb"))
-        input_file_1 = InputFile(Path(folder_msb) / "example_0.msb")
+        self.assertTrue((folder_msb / "example_0.msb").is_file())
+        input_file_1 = InputFile(folder_msb / "example_0.msb")
         self.assertAlmostEqual(input_file_1.variables["Well"].value, 0.25)
-    
+
+
 class TestInputFile(unittest.TestCase):
 
     def test_access_by_index(self):
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         file = InputFile(fullpath)
         for key, value in file.variables.items():
             self.assertEqual(file[key], value)
 
     def test_for_loop(self):
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         file = InputFile(fullpath)
         for i, fi in enumerate(file):
             self.assertEqual(file.variables[i], fi)
 
     def test_fullpath(self):
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         file = InputFile(fullpath)
-        self.assertEqual(file.fullpath, fullpath)
+        self.assertEqual(Path(file.fullpath), fullpath)
         self.assertEqual(file.filename, "only_variables.in")
         self.assertEqual(file.filename_only, "only_variables")
-        self.assertEqual(file.folder_input, folder_nnp)
+        self.assertEqual(Path(file.folder_input), folder_nnp)
         self.assertEqual(file.execute_info, {})
 
         file.filename = "new_name.in"
         self.assertEqual(file.filename, "new_name.in")
         self.assertEqual(file.filename_only, "new_name")
-        self.assertEqual(file.fullpath, os.path.join(folder_nnp, "new_name.in"))
-        self.assertEqual(file.folder_input, folder_nnp)
+        self.assertEqual(Path(file.fullpath), folder_nnp / "new_name.in")
+        self.assertEqual(Path(file.folder_input), folder_nnp)
 
         file.filename_only = "another_filename"
         self.assertEqual(file.filename, "another_filename.in")
         self.assertEqual(file.filename_only, "another_filename")
-        self.assertEqual(file.fullpath, os.path.join(folder_nnp, "another_filename.in"))
-        self.assertEqual(file.folder_input, folder_nnp)
+        self.assertEqual(Path(file.fullpath), folder_nnp / "another_filename.in")
+        self.assertEqual(Path(file.folder_input), folder_nnp)
 
-        npath = os.path.join("new", "folder")
+        npath = Path("new") / "folder"
         file.folder_input = npath
         self.assertEqual(file.filename, "another_filename.in")
         self.assertEqual(file.filename_only, "another_filename")
-        self.assertEqual(file.fullpath, os.path.join(npath, "another_filename.in"))
-        self.assertEqual(file.folder_input, npath)
+        self.assertEqual(Path(file.fullpath), npath / "another_filename.in")
+        self.assertEqual(Path(file.folder_input), npath)
 
-        npath = os.path.join("random", "path")
+        npath = Path("random") / "path"
         file.execute_info["outputdirectory"] = npath
-        self.assertEqual(file.folder_output, npath)
+        self.assertEqual(Path(file.folder_output), npath)
 
 
 class TestSweep(unittest.TestCase):
@@ -796,11 +731,11 @@ class TestSweep(unittest.TestCase):
         self.assertRaises(ValueError, Sweep, {"Name": "some_name"})
 
     def test_nnp_init(self):
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         self.assertRaises(ValueError, Sweep, {"Name": "some_name"}, fullpath)
 
         sweep = Sweep({}, fullpath)
-        self.assertEqual(sweep.fullpath, fullpath)
+        self.assertEqual(Path(sweep.fullpath), fullpath)
         self.assertEqual(sweep.var_sweep, {})
         self.assertFalse(sweep.input_files)
         self.assertFalse(sweep.sweep_output_directory)
@@ -809,7 +744,7 @@ class TestSweep(unittest.TestCase):
         self.assertRaises(TypeError, Sweep, {"float": 1}, fullpath)
 
         sweep = Sweep({"float": [1, 2, 5]}, fullpath)
-        self.assertEqual(sweep.fullpath, fullpath)
+        self.assertEqual(Path(sweep.fullpath), fullpath)
         self.assertEqual(sweep.var_sweep["float"], [1, 2, 5])
 
         self.addCleanup(
@@ -820,23 +755,20 @@ class TestSweep(unittest.TestCase):
         )
 
     def test_nnp_mkdir(self):
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         sweep = Sweep({}, fullpath=fullpath)
         sweep.config.set("nextnano++", "outputdirectory", r"tests//outputs")
-        created_directory = os.path.join(sweep.mk_dir(overwrite=True))
+        created_directory = sweep.mk_dir(overwrite=True)
         self.assertTrue(
-            os.path.samefile(
-                created_directory,
-                os.path.join("tests", "outputs", "only_variables_sweep"),
+            Path(created_directory).samefile(
+                Path("tests") / "outputs" / "only_variables_sweep"
             )
         )
         self.assertTrue(
-            os.path.isdir(os.path.join("tests", "outputs", "only_variables_sweep"))
+            (Path("tests") / "outputs" / "only_variables_sweep").is_dir()
         )
 
-        self.addCleanup(
-            os.rmdir, os.path.join("tests", "outputs", "only_variables_sweep")
-        )
+        self.addCleanup((Path("tests") / "outputs" / "only_variables_sweep").rmdir)
         self.addCleanup(
             delete_files,
             "only_variables",
@@ -845,24 +777,19 @@ class TestSweep(unittest.TestCase):
         )
 
     def test_nnp_mkdir_specify(self):
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         sweep = Sweep({}, fullpath=fullpath)
-        created_directory = os.path.join(
-            sweep.mk_dir(overwrite=True, output_directory=r"tests//outputs")
-        )
+        created_directory = sweep.mk_dir(overwrite=True, output_directory=r"tests//outputs")
         self.assertTrue(
-            os.path.samefile(
-                created_directory,
-                os.path.join("tests", "outputs", "only_variables_sweep"),
+            Path(created_directory).samefile(
+                Path("tests") / "outputs" / "only_variables_sweep"
             )
         )
         self.assertTrue(
-            os.path.isdir(os.path.join("tests", "outputs", "only_variables_sweep"))
+            (Path("tests") / "outputs" / "only_variables_sweep").is_dir()
         )
 
-        self.addCleanup(
-            os.rmdir, os.path.join("tests", "outputs", "only_variables_sweep")
-        )
+        self.addCleanup((Path("tests") / "outputs" / "only_variables_sweep").rmdir)
         self.addCleanup(
             delete_files,
             "only_variables",
@@ -877,18 +804,16 @@ class TestSweep(unittest.TestCase):
             directory=folder_nnp,
             exceptions=["only_variables.in"],
         )
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         sweep = Sweep({"float": [1, 2], "str": ["test1", "test2"]}, fullpath)
         sweep.save_sweep()
 
         files_with_names = [
-            file for file in os.listdir(folder_nnp) if "only_variables" in file
+            p.name for p in folder_nnp.iterdir() if "only_variables" in p.name
         ]
         self.assertEqual(len(files_with_names), 5)
         self.assertTrue(
-            os.path.isfile(
-                os.path.join(folder_nnp, "only_variables__float_2_str_test1_.in")
-            )
+            (folder_nnp / "only_variables__float_2_str_test1_.in").is_file()
         )
 
     def test_nnp_save_temp(self):
@@ -916,11 +841,11 @@ class TestSweep(unittest.TestCase):
 
     # nn3 section
     def test_nn3_init(self):
-        fullpath = os.path.join(folder_nn3, "only_variables.in")
+        fullpath = folder_nn3 / "only_variables.in"
         self.assertRaises(ValueError, Sweep, {"Name": "some_name"}, fullpath)
 
         sweep = Sweep({}, fullpath)
-        self.assertEqual(sweep.fullpath, fullpath)
+        self.assertEqual(Path(sweep.fullpath), fullpath)
         self.assertEqual(sweep.var_sweep, {})
         self.assertFalse(sweep.input_files)
         self.assertFalse(sweep.sweep_output_directory)
@@ -929,7 +854,7 @@ class TestSweep(unittest.TestCase):
         self.assertRaises(TypeError, Sweep, {"float": 1}, fullpath)
 
         sweep = Sweep({"float": [1, 2, 5]}, fullpath)
-        self.assertEqual(sweep.fullpath, fullpath)
+        self.assertEqual(Path(sweep.fullpath), fullpath)
         self.assertEqual(sweep.var_sweep["float"], [1, 2, 5])
 
         self.addCleanup(
@@ -940,24 +865,20 @@ class TestSweep(unittest.TestCase):
         )
 
     def test_nn3_mkdir(self):
-        fullpath = os.path.join(folder_nn3, "only_variables.in")
+        fullpath = folder_nn3 / "only_variables.in"
         sweep = Sweep({}, fullpath=fullpath)
         sweep.config.set("nextnano3", "outputdirectory", r"tests//outputs")
-        # self.assertEqual(os.path.normpath(os.path.join(sweep.mk_dir(overwrite=True))), os.path.normpath(r'tests//outputs\only_variables_sweep'))
-        created_directory = os.path.join(sweep.mk_dir(overwrite=True))
+        created_directory = sweep.mk_dir(overwrite=True)
         self.assertTrue(
-            os.path.samefile(
-                created_directory,
-                os.path.join("tests", "outputs", "only_variables_sweep"),
+            Path(created_directory).samefile(
+                Path("tests") / "outputs" / "only_variables_sweep"
             )
         )
         self.assertTrue(
-            os.path.isdir(os.path.join("tests", "outputs", "only_variables_sweep"))
+            (Path("tests") / "outputs" / "only_variables_sweep").is_dir()
         )
 
-        self.addCleanup(
-            os.rmdir, os.path.join("tests", "outputs", "only_variables_sweep")
-        )
+        self.addCleanup((Path("tests") / "outputs" / "only_variables_sweep").rmdir)
         self.addCleanup(
             delete_files,
             "only_variables",
@@ -972,26 +893,25 @@ class TestSweep(unittest.TestCase):
             directory=folder_nn3,
             exceptions=["only_variables.in"],
         )
-        fullpath = os.path.join(folder_nn3, "only_variables.in")
+        fullpath = folder_nn3 / "only_variables.in"
         sweep = Sweep({"float": [1, 2], "str": ["test1", "test2"]}, fullpath)
         sweep.save_sweep()
 
         files_with_names = [
-            file for file in os.listdir(folder_nn3) if "only_variables" in file
+            p.name for p in folder_nn3.iterdir() if "only_variables" in p.name
         ]
         self.assertEqual(len(files_with_names), 5)
         self.assertTrue(
-            os.path.isfile(
-                os.path.join(folder_nn3, "only_variables__float_2_str_test1_.in")
-            )
+            (folder_nn3 / "only_variables__float_2_str_test1_.in").is_file()
         )
 
     # TODO test parallel sweeps with and without convergenceCheck
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
-        if os.path.isdir(r"tests//outputs\only_variables_sweep"):
-            os.rmdir(r"tests//outputs\only_variables_sweep")
+        sweep_dir = Path("tests") / "outputs" / "only_variables_sweep"
+        if sweep_dir.is_dir():
+            sweep_dir.rmdir()
         delete_files(
             "only_variables", directory=folder_nnp, exceptions=["only_variables.in"]
         )
@@ -1008,8 +928,8 @@ class TestSweep(unittest.TestCase):
         )
         def condition(combination):
             return combination[0] > 0.2
-        
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+
+        fullpath = folder_nnp / "only_variables.in"
         sweep = Sweep(
             {"float": [0.1, 0.2, 0.3, 0.4, 0.5]},
             fullpath,
@@ -1032,7 +952,7 @@ class TestSweep(unittest.TestCase):
         )
         def condition(combination):
             return combination[1] > combination[0]
-        fullpath = os.path.join(folder_nnp, "only_variables.in")
+        fullpath = folder_nnp / "only_variables.in"
         sweep = Sweep(
             {"float": [0.5, 1.5, 2.5], "int": [1, 2, 3]},
             fullpath,
@@ -1044,14 +964,11 @@ class TestSweep(unittest.TestCase):
         for combination in sweep.sweep_infodict.values():
             combination = list(combination.values())
             self.assertTrue(combination[1] > combination[0])
-        
-        
-
 
 
 if __name__ == "__main__":
     unittest.main()
 
-    file = os.path.join(folder_nnp, "only_variables.in")
+    file = folder_nnp / "only_variables.in"
     fi = InputFile(file)
     text = fi.text
