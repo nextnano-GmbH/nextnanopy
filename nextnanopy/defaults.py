@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 import warnings
 from nextnanopy.utils.config import Config
@@ -11,8 +10,7 @@ products = [
     "nextnano.MSB",
     "nextnanoevo",
 ]
-default_folder = str(Path.home())
-config_default_path = os.path.join(default_folder, ".nextnanopy-config")
+config_default_path = Path.home() / ".nextnanopy-config"
 messages = {
     "load_input": [None, None],
     "save_input": [None, None],
@@ -189,7 +187,7 @@ class NNConfig(Config):
         if fullpath is None:
             fullpath = self.default_fullpath
         super().__init__(fullpath, validators)
-        if not os.path.isfile(fullpath):
+        if not Path(fullpath).is_file():
             self.reset()
         elif not self._complete:
             # TODO add tests for these behaviour
