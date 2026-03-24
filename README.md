@@ -39,6 +39,11 @@ Do you want to help nextnanopy? Please send an email to [python@nextnano.com](ma
 
 ## History of changes
 
+
+## Version 1.0.5 (Mar 24th, 2026)
+
+- bugfix
+
 ## Version 1.0.4 (Mar 24th, 2026)
 
 - saving sweeps in temporary location: Sweep.save_sweep(temp=True)
