@@ -39,6 +39,12 @@ Do you want to help nextnanopy? Please send an email to [python@nextnano.com](ma
 
 ## History of changes
 
+## Version 1.0.4 (Mar 24th, 2026)
+
+- saving sweeps in temporary location: Sweep.save_sweep(temp=True)
+- bugfix with json output file of the sweep
+- templates updates
+
 ### Version 1.0.3 (Jan 8th, 2026)
 
 - now modern MSB input files are supported
