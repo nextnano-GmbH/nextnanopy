@@ -895,7 +895,7 @@ class Sweep(InputFileTemplate):
 
         #part where the info is stored
         for inputfile, variable_combination in zip(self.input_files, self.sweep_infodict.values()):
-            self.sweep_output_infodict[inputfile.folder_output] = variable_combination
+            self.sweep_output_infodict[str(inputfile.folder_output)] = variable_combination
         # TODO create files with info in output_directories
         if True:# TODO
             # self.create_infodict_files()
