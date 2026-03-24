@@ -1,5 +1,6 @@
 import sys, os
 import subprocess
+from pathlib import Path
 import queue
 import threading
 import warnings
@@ -29,12 +30,9 @@ def command(
     cmd = defaults.get_command(product)
 
     # warn if output path might be too long
-    tooLongPath = (product in ["nextnano3", "nextnano++"]) and len(
-        outputdirectory
-    ) + 80 > 260  # TODO: how long is the minimal path appended by nn3/nnp simulations?
-    tooLongPathNEGF = (product in ["nextnano.NEGF", "nextnano.NEGF_classic"]) and len(
-        outputdirectory
-    ) + 80 > 260
+    outdir_len = len(str(outputdirectory))
+    tooLongPath = (product in ["nextnano3", "nextnano++"]) and outdir_len + 80 > 260  # TODO: how long is the minimal path appended by nn3/nnp simulations?
+    tooLongPathNEGF = (product in ["nextnano.NEGF", "nextnano.NEGF_classic"]) and outdir_len + 80 > 260
     if tooLongPath or tooLongPathNEGF:
         warnings.warn(
             "The output path might be too long on Windows 10 (maximum 260 characters). Consider abbreviating your input file name and/or sweep variables..."
@@ -100,21 +98,20 @@ def execute(
     **kwargs,
 ):
     filename = get_filename(inputfile, ext=False)
-    inputfile = os.path.abspath(inputfile)
-    outputdirectory = os.path.join(outputdirectory, filename)
+    inputfile = Path(inputfile).resolve()
+    outputdirectory = Path(outputdirectory) / filename
     mkdir_if_not_exist(outputdirectory)
-    logfile = os.path.join(outputdirectory, f"{filename}.log")
+    logfile = outputdirectory / f"{filename}.log"
     cmd = command(inputfile, exe, license, database, outputdirectory, **kwargs)
     cwd = os.getcwd()
-    wdir, executable = os.path.split(
-        exe
-    )  # nn3 assumes wdir at one folder upper than the executable
+    exe = Path(exe)
+    wdir, executable = exe.parent, exe.name  # nn3 assumes wdir at one folder upper than the executable
 
     # validate configuration of executable path
     if executable == "":
         raise FileNotFoundError(f"Executable path is empty! Check nextnanopy.config")
 
-    if (not os.path.isfile(exe)) or (not os.path.isdir(wdir)):
+    if (not exe.is_file()) or (not wdir.is_dir()):
         raise FileNotFoundError(
             f"Executable path is invalid: {exe}\nCheck nextnanopy.config"
         )
@@ -160,6 +157,6 @@ def run_script(script, kwargs=None, show_log=True):
             args.append([key, kwargs[key]])
     cmd = generate_command(args)
     process = send(cmd)
-    logfile = os.path.join(os.getcwd(), f"{os.path.basename(script)}.log")
+    logfile = Path.cwd() / f"{Path(script).name}.log"
     start_log(process, logfile, show_log)
     return process

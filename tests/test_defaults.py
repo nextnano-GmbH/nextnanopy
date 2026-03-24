@@ -1,6 +1,6 @@
 import unittest
+from pathlib import Path
 from nextnanopy.utils import mycollections
-import os
 from nextnanopy import defaults
 from nextnanopy.nnp import defaults as nnp_defaults
 from nextnanopy.nn3 import defaults as nn3_defaults
@@ -8,9 +8,9 @@ from nextnanopy.negf import defaults as negf_defaults
 from nextnanopy.msb import defaults as msb_defaults
 
 
-folder_nnp = os.path.join("tests", "datafiles", "nextnano++")
-folder_nn3 = os.path.join("tests", "datafiles", "nextnano3")
-folder_negf = os.path.join("tests", "datafiles", "nextnano.NEGF")
+folder_nnp = Path("tests") / "datafiles" / "nextnano++"
+folder_nn3 = Path("tests") / "datafiles" / "nextnano3"
+folder_negf = Path("tests") / "datafiles" / "nextnano.NEGF"
 
 
 class TestDictlist(unittest.TestCase):
@@ -26,7 +26,7 @@ class TestDictlist(unittest.TestCase):
 
 class TestFormatting(unittest.TestCase):
     def test_nn3(self):
-        fullpath = os.path.join(folder_nn3, "example.in")
+        fullpath = folder_nn3 / "example.in"
         self.assertTrue(nn3_defaults.is_nn3_input_file(fullpath))
         self.assertFalse(nnp_defaults.is_nnp_input_file(fullpath))
         self.assertFalse(negf_defaults.is_negf_classic_input_file(fullpath))
@@ -39,7 +39,7 @@ class TestFormatting(unittest.TestCase):
         )
 
     def test_nnp(self):
-        fullpath = os.path.join(folder_nnp, "example.in")
+        fullpath = folder_nnp / "example.in"
         self.assertFalse(nn3_defaults.is_nn3_input_file(fullpath))
         self.assertTrue(nnp_defaults.is_nnp_input_file(fullpath))
         self.assertFalse(negf_defaults.is_negf_classic_input_file(fullpath))
@@ -50,7 +50,7 @@ class TestFormatting(unittest.TestCase):
         self.assertEqual(defaults.get_fmt("nextnano++")["input_pattern"], "global{")
 
     def test_negf_classic(self):
-        fullpath = os.path.join(folder_negf, "example.xml")
+        fullpath = folder_negf / "example.xml"
         self.assertFalse(nn3_defaults.is_nn3_input_file(fullpath))
         self.assertFalse(nnp_defaults.is_nnp_input_file(fullpath))
         self.assertFalse(negf_defaults.is_negf_input_file(fullpath))
@@ -62,10 +62,8 @@ class TestFormatting(unittest.TestCase):
             defaults.get_fmt("nextnano.NEGF_classic")["input_pattern"], "<Simulation"
         )
 
-    # TODO:
     def test_negf(self):
-        # TODO: prepare an NEGF++ .negf input example for test
-        fullpath = os.path.join(folder_negf, "Minimal_InputFile.negf")
+        fullpath = folder_negf / "Minimal_InputFile.negf"
         self.assertFalse(nn3_defaults.is_nn3_input_file(fullpath))
         self.assertFalse(nnp_defaults.is_nnp_input_file(fullpath))
         self.assertFalse(negf_defaults.is_negf_classic_input_file(fullpath))
