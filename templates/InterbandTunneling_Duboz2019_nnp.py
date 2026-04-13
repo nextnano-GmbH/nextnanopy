@@ -1,6 +1,6 @@
 """
 Created: 2022/06/09
-Updated: 2026/03/11
+Updated: 2026/04/13
 
 This Python script computes interband tunneling current through a highly-doped nitride heterojunction.
 [nextnano++ tutorial]
@@ -26,14 +26,14 @@ import nextnanopy as nn
 from nextnanopy.utils.plotting import use_nxt_style
 from nextnanopy.utils.misc import mkdir_if_not_exist
 
-use_nxt_style()
-# shortcuts
-# from nnShortcuts.common import CommonShortcuts
-# s = CommonShortcuts()
-# from nnHelpers import SweepHelper
+
+
 from pathlib import Path
 # stopwatch
 import timeit
+
+# nextnano style for plotting
+use_nxt_style()
 start = timeit.default_timer()
 
 # physics constants
@@ -82,7 +82,10 @@ def calculate_effective_field(df_potential, ax_to_plot=None):
 #================================================================
 
 # correct file is in the next release of nn++
-folder_path = r'c:\Program Files\nextnano\2026_01_19\nextnano++\examples\tricks_and_hacks'
+# PLEASE ADJUST TO THE PATH OF YOUR NEXTNANO INSTALLATION FOLDER
+# PLEASE USE THE INPUT FILE FROM ANY RELEASE FROM 2026 ONWARDS
+# if you have earlier version of nn++ (like 2025_12_20), please contact us to get the input file
+folder_path = r'c:\Program Files\nextnano\2025_12_20\nextnano++\examples\tricks_and_hacks'
 # input file
 filename = 'InterbandTunneling_Duboz2019_nnp.nnp'
 
@@ -103,14 +106,10 @@ sweep_values = np.linspace(-0.2, -1.0, 9) # min, max, number of points
 # }
 
 # choose either 6-band k.p or single-band simulation for the valence band. You can also set both to False when you do not want to run simulation (only postprocessing with KP6 output data).
-RUN_KP6 = True  # run 6-band k.p simulation
+RUN_KP6 = False  # run 6-band k.p simulation
 # RUN_KP6 = False
 # RUN_SINGLE_BAND = True   # run single-band (HH, LH, SO) simulation
-RUN_SINGLE_BAND = False
-
-
-# RemoveInputFile = True   # remove the temporary input file(s) after bias sweep
-# RemoveInputFile = False   # keep the temporary input file(s) in the input folder
+RUN_SINGLE_BAND = True
 
 CALCULATE_EFFECTIVE_FIELD_FROM_OUTPUT = True   # calculate effective field from nextnano output
 # CALCULATE_EFFECTIVE_FIELD_FROM_OUTPUT = False   # specify effective field by hand
