@@ -13,7 +13,8 @@ def find_line_by_pattern(_str, lines):
     raise ValueError(f'{_str} is not in the input file')
 
 
-input_template = nn.InputFile(r'example3D_gds.in')
+input_template = nn.InputFile(r'example3D_gds.nnp')
+
 raw_lines = list(input_template.lines)
 
 # Here gates
@@ -57,7 +58,8 @@ raw_lines = raw_lines[0:idx + 1] + contacts + raw_lines[idx + 1:]
 text = f.lines(*raw_lines)
 new_input = nn.InputFile()
 new_input.text = text
-new_input.fullpath = os.path.join(os.getcwd(), 'example3D_with_gds.in')  # save at current working directory
+new_input.fullpath = os.path.join(os.getcwd(), 'example3D_with_gds.nnp')  # save at current working directory
+new_input.product = "nextnano++"
 new_input.save(overwrite=True)
 new_input.execute()
 
