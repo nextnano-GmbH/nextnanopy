@@ -39,6 +39,9 @@ Do you want to help nextnanopy? Please send an email to [python@nextnano.com](ma
 
 ## History of changes
 
+## Version 1.1.0 (May 05th, 2026)
+
+- new parameter `parse` for `InputFile` (default `False`): content parsing of nextnano++ input files is now opt-in. Use `InputFile(fullpath, parse=True)` to populate `file.content` with the block structure. With the default `parse=False` the file loads normally — variables are available, `content` is `None` — which also allows loading files where preprocessor directives cause unbalanced `{}` that the parser cannot handle.
 
 ## Version 1.0.5 (Mar 24th, 2026)
 
