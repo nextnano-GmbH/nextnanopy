@@ -1,0 +1,144 @@
+# 1D sample for solving quantum-poisson
+
+#Begin NextnanoWizard parameter section
+$BIAS = 0.0 # Gate voltage(V)
+$ALLOY = 0.3 # Al content of AlGaAs layer
+$SIZE = 80 # size of AlGaAs layer (nm)
+$DOPECONC = 3e+18 # donor concentration of 10nm doping layer (cm^-3)
+$DOPEPOS = 65 # distance between AlGaAs-GaAs interface and delta doping position (nm)
+$MINGRID = 0.1 # minimum grid spacing (nm)
+$NUMEV = 10 # number of eigenvalues to be calculated
+$BARRIER = 0.7 # height of left Schottky barrier (eV)
+#End NextnanoWizard parameter section
+
+
+global{
+   simulate1D{}
+   
+   temperature = 4
+
+   substrate{ name = "GaAs" }
+
+   crystal_zb{ x_hkl = [1, 0, 0] y_hkl = [0, 1, 0] }
+}
+
+
+grid{
+   xgrid{
+      line{ pos = 0                   spacing = 0.5 }
+      line{ pos = 10                  spacing = 0.5 }
+      line{ pos = 10+$SIZE-$DOPEPOS-5 spacing = 0.5 }
+      line{ pos = 10+$SIZE-$DOPEPOS+5 spacing = 0.5 }
+      line{ pos = 10+$SIZE            spacing = $MINGRID }
+      line{ pos = 400                 spacing = 5 }
+   }
+}
+
+
+impurities{
+   donor{ name = "Si" energy = -10 degeneracy = 2 } # fully ionized
+}
+
+
+contacts{
+   schottky{ 
+      name = "gate"
+      bias = 0
+      barrier = $BARRIER
+   }
+
+   fermi{ 
+      name = "backgate"
+      bias = -$BIAS
+   }
+}
+
+
+structure{
+   output_material_index{}
+   output_contact_index{}
+   output_impurities{}
+
+   # AlGaAs layer
+   region{
+      everywhere{} # default material
+      ternary_constant{ name = "Al(x)Ga(1-x)As" alloy_x = $ALLOY }
+   }
+
+   # GaAs cap layer
+   region{
+      line{ x = [0, 10] }
+      binary{ name = "GaAs" }
+   }
+
+   # doping layer
+   region{
+      line{ x = [10+$SIZE-$DOPEPOS-5, 10+$SIZE-$DOPEPOS+5] }
+      doping{ constant{ name = "Si" conc = $DOPECONC} }
+   }
+
+   # GaAs substrate
+   region{
+      line{ x = [10+$SIZE, 4000] }
+      binary{ name = "GaAs" }
+   }
+
+   #  Top gate (Schottky contact)
+   region{ 
+      line{ x = [0, 1] }
+      contact{ name = "gate" }
+   }
+
+   # Back gate (Ohmic contact)
+   region{ 
+      line{ x = [390, 400] }
+      contact{ name = "backgate" }
+   }
+}
+
+
+classical{
+   Gamma{}
+   HH{}
+
+   output_bandedges{}
+   output_carrier_densities{}
+   output_ionized_dopant_densities{}
+}
+
+# non parseable part
+!IF($BIAS)
+quantum {
+!ELSE 
+some_other_quantum{
+!ENDIF
+   region{
+      name = "2DEG"
+      x = [10+$SIZE-5, 250]
+      Gamma{ num_ev = $NUMEV }
+      output_wavefunctions{ probabilities = yes  max_num = $NUMEV }
+   }
+}
+
+
+poisson{
+   output_potential{}
+}
+
+
+currents{
+   recombination_model{
+      SRH         = no
+      Auger       = no
+      radiative   = no
+   }
+   insulator_bandgap = 0.05 # guarantees that fermi level drops in barrier region without solving current equation
+   output_fermi_levels{}
+}
+
+
+run{
+   solve_poisson{}
+   solve_quantum{}
+   outer_iteration{} # solve coupled Schrodinger-Poisson equations
+}

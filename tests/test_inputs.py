@@ -197,7 +197,7 @@ class Test_nnp(unittest.TestCase):
 
     def test_content_get(self):
         fullpath = folder_nnp / "only_variables.in"
-        file = InputFile(fullpath)
+        file = InputFile(fullpath, parse=True)
 
         self.assertIsNotNone(file.content)
         self.assertEqual(file.content[0], "$float = 0.0 ")
@@ -205,12 +205,25 @@ class Test_nnp(unittest.TestCase):
 
     def test_content_set(self):
         fullpath = folder_nnp / "only_variables.in"
-        file = InputFile(fullpath)
+        file = InputFile(fullpath, parse=True)
 
         file.content[0] = "$DUMMY = 1"
         self.assertEqual(file.content[0], "$DUMMY = 1")
         file.content["_entry_0"] = "DUMMY LINE"
         self.assertEqual(file.content[0], "DUMMY LINE")
+
+    def test_non_parseable_parse_true_raises(self):
+        fullpath = folder_nnp / "example_non_parseable.nnp"
+        with self.assertRaises(ValueError):
+            InputFile(fullpath, parse=True)
+
+    def test_non_parseable_parse_false_ok(self):
+        fullpath = folder_nnp / "example_non_parseable.nnp"
+        file = InputFile(fullpath, parse=False)
+        self.assertIsNone(file.content)
+        self.assertEqual(len(file.variables), 8)
+        self.assertAlmostEqual(file.variables["BIAS"].value, 0.0)
+        self.assertAlmostEqual(file.variables["ALLOY"].value, 0.3)
 
 
 class Test_nn3(unittest.TestCase):

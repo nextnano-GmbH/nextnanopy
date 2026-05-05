@@ -17,6 +17,8 @@ class InputFile(InputFileTemplate):
         return self.variables
 
     def load_content(self):
+        if not self.parse:
+            return
         parser = Parser()
         #parser.parse(self.raw_lines, mode='lines')
         #print(self.raw_lines)

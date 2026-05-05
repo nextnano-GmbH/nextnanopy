@@ -100,12 +100,13 @@ class InputFileTemplate(object):
     """
     _shared_temp_dir = None
 
-    def __init__(self, fullpath=None, configpath=None):
+    def __init__(self, fullpath=None, configpath=None, parse=False):
         self.raw_lines = []
         self.variables = DictList()
         self.content = None
         self.fullpath = fullpath
         self.product = 'not valid'
+        self.parse = parse
         self.__parallel__ = False
         if fullpath is not None:
             self.load(fullpath)
@@ -540,9 +541,9 @@ class InputFile(InputFileTemplate):
     #         setattr(self, key, self._helper_input_file.__dict__[key])
 
     def __new__(cls, fullpath=None, configpath=None, *args, **kwargs):
-        preInputFile = InputFileTemplate(fullpath,configpath)
+        preInputFile = InputFileTemplate(fullpath, configpath)
         _InputFileType = defaults.get_InputFile(preInputFile.product)
-        return _InputFileType(fullpath, configpath)
+        return _InputFileType(fullpath, configpath, **kwargs)
 
     # def load_variables(self):
     #     """
