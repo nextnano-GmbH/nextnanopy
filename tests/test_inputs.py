@@ -1,4 +1,5 @@
 import builtins
+import inspect
 import os
 import tempfile
 import unittest
@@ -1581,6 +1582,140 @@ class Test_check_convergence_pause_tty(unittest.TestCase):
         prompt = unittest.mock.Mock(side_effect=AssertionError("input() called for converged log"))
         with unittest.mock.patch("builtins.input", prompt):
             self.assertIsNone(file.check_convergence(mode="pause"))
+
+
+class TestExecuteOutputDirectoryParams(unittest.TestCase):
+    """`overwrite` and `create_subdirectory` are execute() parameters, not command args.
+
+    Where the output goes is nextnanopy's own business, so both are named parameters
+    of InputFile.execute() rather than members of **kwargs: **kwargs is the set of
+    arguments handed to the simulator as they are, and it is also where a misspelled
+    keyword would disappear without a word. They are not configuration options
+    either - the config file holds command line arguments (plus the outputdirectory
+    they are resolved against), so nothing there needs to know about them.
+
+    commands.execute() is patched out here: what it does with the two values is
+    covered by TestExecuteOutputDirectory in test_commands.py, so these tests only
+    check that they arrive.
+    """
+
+    def setUp(self):
+        patch = unittest.mock.patch("nextnanopy.inputs.cmd_execute", return_value={})
+        self.cmd_execute = patch.start()
+        self.addCleanup(patch.stop)
+
+    def passed_to_commands(self):
+        _args, kwargs = self.cmd_execute.call_args
+        return kwargs
+
+    def test_both_are_named_parameters_of_execute(self):
+        parameters = inspect.signature(InputFile.execute).parameters
+        self.assertEqual(parameters["overwrite"].default, False)
+        self.assertEqual(parameters["create_subdirectory"].default, True)
+
+    def test_the_defaults_are_a_subdirectory_per_file_that_no_run_writes_over(self):
+        # overwrite=False like .save() and Sweep.execute_sweep(); the always-reuse
+        # behaviour of earlier versions is now overwrite=True.
+        InputFile(folder_nnp / "only_variables.in").execute()
+
+        passed = self.passed_to_commands()
+        self.assertEqual(passed["overwrite"], False)
+        self.assertEqual(passed["create_subdirectory"], True)
+
+    def test_values_are_forwarded(self):
+        InputFile(folder_nnp / "only_variables.in").execute(
+            overwrite=True, create_subdirectory=False
+        )
+
+        passed = self.passed_to_commands()
+        self.assertEqual(passed["overwrite"], True)
+        self.assertEqual(passed["create_subdirectory"], False)
+
+    def test_neither_is_a_config_option(self):
+        # .default_command_args is the config section verbatim, and every entry in it
+        # becomes a command line argument, so these two must stay out of it.
+        file = InputFile(folder_nnp / "only_variables.in")
+
+        self.assertNotIn("overwrite", file.default_command_args)
+        self.assertNotIn("create_subdirectory", file.default_command_args)
+
+
+class TestSweepForwardsOverwrite(unittest.TestCase):
+    """execute_sweep(overwrite=...) reaches the individual simulations.
+
+    It already decides whether the sweep folder is reused or created fresh; the
+    same answer has to reach each input file underneath, otherwise a sweep run with
+    overwrite=False still clobbers per-file output whenever the folder it writes into
+    is one an earlier run already used (separate_sweep_dir=False, or a reused sweep
+    folder). The per-file subdirectory itself is never switched off for a sweep: it
+    is the only thing keeping the sweep points apart.
+    """
+
+    def setUp(self):
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        self.outputdirectory = Path(folder.name)
+
+        # InputFileTemplate, not InputFile: the sweep's files are product classes,
+        # which are siblings of InputFile and inherit execute() from the template.
+        # autospec=True so the file being executed is recorded with the call.
+        patch = unittest.mock.patch.object(
+            InputFileTemplate, "execute", autospec=True, side_effect=self.fake_execute
+        )
+        self.execute = patch.start()
+        self.addCleanup(patch.stop)
+
+    def fake_execute(self, input_file, **kwargs):
+        """Stand in for InputFile.execute() without running anything.
+
+        The real one stores the output directory in .execute_info, which
+        execute_sweep() reads back through .folder_output once every file is done.
+        """
+        input_file.execute_info = self.output_info(input_file)
+        return input_file.execute_info
+
+    def output_info(self, input_file):
+        return {"outputdirectory": self.outputdirectory / input_file.filename_only}
+
+    def make_sweep(self):
+        sweep = Sweep({"float": [1, 2]}, folder_nnp / "only_variables.in")
+        # temp=True keeps the generated input files out of the test data folder
+        sweep.save_sweep(temp=True)
+        return sweep
+
+    def test_each_input_file_gets_the_sweep_overwrite_value(self):
+        sweep = self.make_sweep()
+
+        sweep.execute_sweep(overwrite=False, outputdirectory=self.outputdirectory)
+
+        self.assertEqual(self.execute.call_count, 2)
+        for call in self.execute.call_args_list:
+            self.assertEqual(call.kwargs["overwrite"], False)
+            self.assertEqual(call.kwargs.get("create_subdirectory", True), True)
+
+    def test_overwrite_true_is_forwarded_too(self):
+        sweep = self.make_sweep()
+
+        sweep.execute_sweep(overwrite=True, outputdirectory=self.outputdirectory)
+
+        self.assertEqual(self.execute.call_count, 2)
+        for call in self.execute.call_args_list:
+            self.assertEqual(call.kwargs["overwrite"], True)
+
+    def test_the_parallel_branch_forwards_it_as_well(self):
+        # parallel_limit > 1 runs the files through an ExecutionQueue, which passes
+        # the kwargs it was built with to every InputFile.execute() it starts.
+        sweep = self.make_sweep()
+        for input_file in sweep.input_files:
+            # the queue is mocked away, so nothing sets this along the way
+            input_file.execute_info = self.output_info(input_file)
+
+        with unittest.mock.patch("nextnanopy.inputs.ExecutionQueue") as queue:
+            sweep.execute_sweep(
+                overwrite=False, parallel_limit=2, outputdirectory=self.outputdirectory
+            )
+
+        self.assertEqual(queue.call_args.kwargs["overwrite"], False)
 
 
 if __name__ == "__main__":

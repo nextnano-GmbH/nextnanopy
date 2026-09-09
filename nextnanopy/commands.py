@@ -8,7 +8,7 @@ from pathlib import Path
 
 from nextnanopy import defaults
 from nextnanopy.utils.formatting import generate_command
-from nextnanopy.utils.misc import mkdir_if_not_exist
+from nextnanopy.utils.misc import mkdir_even_if_exists, mkdir_if_not_exist
 
 
 def command(
@@ -105,8 +105,32 @@ def execute(
     outputdirectory,
     show_log=True,
     parallel=False,
+    overwrite=False,
+    create_subdirectory=True,
     **kwargs,
 ):
+    """
+    Run one input file and return a dict describing the started simulation.
+
+    ``**kwargs`` are the simulator's own command line arguments and are passed on to
+    the product's command builder as they are. ``overwrite`` and
+    ``create_subdirectory`` are not among them: they only decide which directory the
+    simulation is started on, which is nextnanopy's own bookkeeping.
+
+    Parameters
+    ----------
+    overwrite : bool, optional
+        If False (default), the output directory is created under an unused name: an
+        index is appended (``example_0``, ``example_1``, ...) when the name is already
+        taken, so a run never writes into an earlier run's output. If True, an
+        existing directory is used as it is - which means writing next to whatever
+        the earlier run left there; nothing is deleted.
+        Has no effect when create_subdirectory is False.
+    create_subdirectory : bool, optional
+        If True (default), the simulation writes into
+        ``<outputdirectory>/<input file name>/``. If False, it writes into
+        ``outputdirectory`` itself.
+    """
     # validate the input file
     if not str(inputfile):
         raise ValueError("Input file path is empty")
@@ -128,8 +152,14 @@ def execute(
         raise FileNotFoundError(f"Executable path is invalid: {exe}\nCheck nextnanopy.config")
 
     filename = inputfile.stem
-    outputdirectory = Path(outputdirectory) / filename
-    mkdir_if_not_exist(outputdirectory)
+    if not create_subdirectory:
+        # everything below (the log file, the command line, the returned info) follows
+        # outputdirectory, so switching the subdirectory off is only this branch
+        outputdirectory = Path(mkdir_if_not_exist(Path(outputdirectory)))
+    elif overwrite:
+        outputdirectory = Path(mkdir_if_not_exist(Path(outputdirectory) / filename))
+    else:
+        outputdirectory = Path(mkdir_even_if_exists(outputdirectory, filename))
     logfile = outputdirectory / f"{filename}.log"
     cmd = command(inputfile, exe, license, database, outputdirectory, **kwargs)
     cwd = os.getcwd()

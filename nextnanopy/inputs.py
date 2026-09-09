@@ -312,7 +312,13 @@ class InputFileTemplate:
         return self.fullpath
 
     def execute(
-        self, show_log=True, convergenceCheck=False, convergence_check_mode="pause", **kwargs
+        self,
+        show_log=True,
+        convergenceCheck=False,
+        convergence_check_mode="pause",
+        overwrite=False,
+        create_subdirectory=True,
+        **kwargs,
     ):
         """
         Execute the input file located at .fullpath
@@ -337,8 +343,22 @@ class InputFileTemplate:
               behaves like 'terminate' instead of blocking on input
             - 'terminate': terminate the script if the simulation did not converge
             - 'continue': notify a user but continues execution of script
+        overwrite : bool, optional
+            if False, the output directory is created under an unused name: an index
+            is appended ('example_0', 'example_1', ...) when the name is already
+            taken, so a run never writes into an earlier run's output. If True, an
+            existing directory is used as it is - which means writing next to
+            whatever the earlier run left there; nothing is deleted.
+            Has no effect when create_subdirectory is False.
+            (default is False)
+        create_subdirectory : bool, optional
+            if True, the simulation writes into
+            '<outputdirectory>/<input file name>/'. If False, it writes into the
+            outputdirectory itself.
+            (default is True)
         **kwargs
-            kwargs may contain:
+            the nextnano product's own command line arguments, passed on as they are.
+            Anything not given here comes from .config. kwargs may contain:
 
             exe : str, optional
                 path to executable
@@ -360,12 +380,23 @@ class InputFileTemplate:
         execute_info['process'] is the shell process, not the simulator
         itself. On Windows, calling .kill()/.terminate() on it stops only
         the shell wrapper; the running simulation is NOT stopped.
+
+        Where the output goes is decided by overwrite/create_subdirectory, which are
+        parameters rather than members of **kwargs: they steer nextnanopy, not the
+        simulator, so they are also not config options. .folder_output holds the
+        directory that was chosen once the run has started.
         """
 
         cmd_kwargs = dict(self.default_command_args)
         cmd_kwargs.update(kwargs)
         cmd_kwargs["inputfile"] = self.fullpath
-        info = cmd_execute(show_log=show_log, parallel=self.__parallel__, **cmd_kwargs)
+        info = cmd_execute(
+            show_log=show_log,
+            parallel=self.__parallel__,
+            overwrite=overwrite,
+            create_subdirectory=create_subdirectory,
+            **cmd_kwargs,
+        )
         self.execute_info = info
         if (
             convergenceCheck and not self.__parallel__
@@ -1101,6 +1132,10 @@ class Sweep:
         overwrite : bool, optional
             if True, the output overwrites the old output data. If False, execution will create a new output folder
             (with the unique name, created by adding an integer to the foldername). Default is False.
+            It applies to the sweep folder and to the folder of every simulation in
+            it, so a sweep run with overwrite=False writes over no earlier output at
+            either level. The per-file subfolder itself is always created: it is what
+            keeps the sweep points apart.
         show_log : bool, optional
             if True, the simulation log is displayed in the console. If False, the count of current simulation is displayed without log.
             Default is True.
@@ -1157,6 +1192,7 @@ class Sweep:
                 show_log=show_log,
                 convergenceCheck=convergenceCheck,
                 convergence_check_mode=convergence_check_mode,
+                overwrite=overwrite,
                 **kwargs,
             )
             execution_queue.add(*self.input_files)
@@ -1172,6 +1208,7 @@ class Sweep:
                     show_log=show_log,
                     convergenceCheck=convergenceCheck,
                     convergence_check_mode=convergence_check_mode,
+                    overwrite=overwrite,
                     **kwargs,
                 )
         if delete_input_files:
