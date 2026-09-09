@@ -4,27 +4,30 @@ from collections import OrderedDict
 class DictList(OrderedDict):
     """
     This is a customized collections.OrderedDict
+
     It is a mixture between a dictionary and a list because it allows to
     access the values via keys or integer indexes.
-    Common usage:
+    Common usage::
+
         d = DictList(a=3, b='t')
         d[0] = 3
         d['a'] = 3
 
     It has all the methods and attributes from a dictionary like .keys(), .values(), .items()
 
-    Moreover, it supports iterations like a list:
-    for value in d:
-        print(value)
-    >>> 3
-    >>> 't'
+    Moreover, it supports iterations like a list::
+
+        for value in d:
+            print(value)
+        >>> 3
+        >>> 't'
 
     Two deliberate deviations from normal Mapping semantics:
 
     1. Iteration yields VALUES, not keys. This is the documented behaviour of this class and
-       much of nextnanopy relies on it (e.g. `for var in datafile.variables: var.name`).
-       Note that dict/OrderedDict C-level fast paths bypass __iter__, so `dict(d)`,
-       `d.update(other)`, `key in d` and `**d` keep their usual key-based behaviour.
+       much of nextnanopy relies on it (e.g. ``for var in datafile.variables: var.name``).
+       Note that dict/OrderedDict C-level fast paths bypass __iter__, so ``dict(d)``,
+       ``d.update(other)``, ``key in d`` and ``**d`` keep their usual key-based behaviour.
        Use .keys() when you need keys.
     2. Integer subscripts are positions, not keys, so integer keys are unreachable via d[...].
        All keys used in nextnanopy are strings (variable/file/folder names).

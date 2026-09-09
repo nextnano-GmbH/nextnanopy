@@ -30,11 +30,12 @@ NOT_VALID = "not valid"
 
 @dataclass(frozen=True)
 class ProductSpec:
-    """Everything nextnanopy knows about one nextnano product.
+    """
+    Everything nextnanopy knows about one nextnano product.
 
     A product need not support every part of the package. nextnanoevo has configuration
     but no input-file format at all, so its fmt/command/detect/InputFile/get_loader are
-    None and the matching getters reject it. `None` therefore means "this product has no
+    None and the matching getters reject it. ``None`` therefore means "this product has no
     such thing", and the getters turn that into the ValueError they always raised.
     """
 
@@ -268,15 +269,16 @@ _config = None
 
 
 def get_config():
-    """Return the process-wide NNConfig, building it on first use.
+    """
+    Return the process-wide NNConfig, building it on first use.
 
     Constructing an NNConfig reads ~/.nextnanopy-config, and creates it if it is
     missing, so it is deliberately not done at import time: importing the package
-    must not touch the user's home directory. `nextnanopy.config` resolves here via
+    must not touch the user's home directory. ``nextnanopy.config`` resolves here via
     the module __getattr__ in nextnanopy/__init__.py, so the config is built on first
     access instead.
 
-    This is the configuration new input files start from: with no `configpath`,
+    This is the configuration new input files start from: with no ``configpath``,
     InputFileTemplate.__init__ takes a copy of it. It lives here rather than in
     nextnanopy/__init__.py, where it used to, because nextnanopy.inputs has to reach
     it and cannot import the package root -- the package root imports nextnanopy.inputs.

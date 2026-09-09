@@ -145,9 +145,7 @@ def str_to_name_unit(_str, init="[", end="]", default_unit=None, add_rest_to_nam
 
 
 def str_to_name_unit_with_rest(_str, init, end, default_unit=None):
-    """
-    For the weird definition like 'psi[eV]_real' and 'psi[eV]_imag'
-    """
+    """For the weird definition like 'psi[eV]_real' and 'psi[eV]_imag'"""
     name, unit = str_to_name_unit(_str, init, end, default_unit, add_rest_to_name=True)
     return name, unit
 

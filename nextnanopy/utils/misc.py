@@ -33,9 +33,13 @@ def mkdir_if_not_exist(path):
 
 
 def candidate_names(path):
-    """Names to try, in order: the requested one first, then name_0, name_1, ... Whether any
-    of them is free is not decided here - see savetxt. An index already on the name is dropped
-    before counting, so 'ex_0.in' falls back to 'ex_1.in' rather than to 'ex_0_0.in'."""
+    """
+    Names to try, in order: the requested one first, then name_0, name_1, ...
+
+    Whether any of them is free is not decided here - see savetxt. An index already on the
+    name is dropped before counting, so 'ex_0.in' falls back to 'ex_1.in' rather than to
+    'ex_0_0.in'.
+    """
     yield path
     stem = get_file_prefix(path.name)
     for idx in itertools.count():
@@ -113,7 +117,10 @@ def get_file_idx(file):
 
 
 def mkdir_even_if_exists(path, name):
-    """creates a directory under path with a given name. If exists, adds integer number to directory name.
+    """
+    creates a directory under path with a given name.
+
+    If exists, adds integer number to directory name.
     returns directory full path
 
     The name is claimed by creating the directory, not by checking whether it exists and creating

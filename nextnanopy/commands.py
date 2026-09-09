@@ -50,7 +50,7 @@ def command(
 
 def send(cmd, cwd=None):
     """
-    Launch `cmd` through the system shell (`shell=True`).
+    Launch ``cmd`` through the system shell (``shell=True``).
 
     Note: because the command runs via the shell, the returned Popen object is
     the shell process (cmd.exe on Windows), not the simulator itself. On
@@ -153,21 +153,22 @@ def execute(
 def run_script(script, kwargs=None, show_log=True):
     """
     The function runs a python script with given arguments. Output is stored in the file script_name.log
+
     Parameters
     ----------
-    script: str
+    script : str
         path to the python script
-    kwargs: dict
+    kwargs : dict
         optional parameters, {keyword:argument,keyword:argument}
         for a keyword without argument leave argument as an empty string ''
 
         EXAMPLE: {'-o': 'my_output_folder','-p':''} will be converted to '-o my_output_folder -p'
-    show_log - bool
+    show_log : bool
         show the log in console output, default is True
 
     Returns
     -------
-    process: subprocess.POPEN
+    process : subprocess.POPEN
     """
     args = [[sys.executable, script]]
     if kwargs:

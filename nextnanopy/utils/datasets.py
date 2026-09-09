@@ -12,9 +12,8 @@ def default_label_fmt(name, unit):
 class Data:
     """
     This class stores any kind of information from nextnano files (input files, data files).
-    This is a template class for datasets like Variables, Coords, InputVariables, etc.
 
-    ...
+    This is a template class for datasets like Variables, Coords, InputVariables, etc.
 
     Parameters
     ----------
@@ -85,8 +84,6 @@ class Variable(Data):
     """
     This class stores independent variables from data files.
 
-    ...
-
     Parameters
     ----------
     name : str
@@ -115,12 +112,10 @@ class Variable(Data):
         formatting label with label_fmt(name, unit) (default is None)
         If it is None, label_fmt = default_label_fmt, i.e. f'{name} ({unit})'
 
-
     Methods
-    ----------
+    -------
     get_value()
         return a copy of the value
-
     """
 
     params = ["name", "value", "unit", "metadata"]
@@ -141,8 +136,6 @@ class Variable(Data):
 class Coord(Data):
     """
     This class stores the coordinates from data files.
-
-    ...
 
     Parameters
     ----------
@@ -185,7 +178,7 @@ class Coord(Data):
         value with offset
 
     Methods
-    ----------
+    -------
     get_value(use_offset=False)
         return a copy of the value with or without the offset
     """
@@ -214,10 +207,10 @@ class Coord(Data):
 
 class InputVariable(Data):
     """
-    Template class for the input variables. For each nextnano product, it will be specified
-    the variable character (e.g $ for nextnano++) and the comment character (e.g # for nextnano++).
+    Template class for the input variables.
 
-    ...
+    For each nextnano product, it will be specified
+    the variable character (e.g $ for nextnano++) and the comment character (e.g # for nextnano++).
 
     Parameters
     ----------
@@ -254,7 +247,7 @@ class InputVariable(Data):
         return the raw text for the input file
 
     Methods
-    ----------
+    -------
     get_value(use)
         return a copy of the value
     """

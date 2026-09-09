@@ -19,11 +19,12 @@ def displayname(data):
     """
     Parameters
     ----------
-    data: DataFolder or filepath
+    data : DataFolder or filepath
+
     Returns
     -------
     str
-    formatting filenames and folder names in datafolder to display DataFolder in tree structure
+        formatting filenames and folder names in datafolder to display DataFolder in tree structure
     """
     if isinstance(data, DataFolder):
         return os.path.basename(data.fullpath) + r"/"
@@ -34,58 +35,53 @@ def displayname(data):
 class DataFolder:
     """
     This class stores information about output directory.
+
     The stored data contains files (.files) and folders (.folders)
     Navigation between folders could be done in 3 ways:
-        1. DataFolder.folders['folder_name']
-        2. DataFolder.go_to('subfolder1', 'subfolder2', 'subfolder3')
-        3. DataFolder.subfolder1.subfolder2.subfolder3
+
+    1. DataFolder.folders['folder_name']
+    2. DataFolder.go_to('subfolder1', 'subfolder2', 'subfolder3')
+    3. DataFolder.subfolder1.subfolder2.subfolder3
+
     For each method see details below.
 
     The initialization of the class will execute load and create_navigation methods.
 
-
-    Parameters:
-    ----------------
-    fullpath: str
+    Parameters
+    ----------
+    fullpath : str
         path to a file
 
-
-
-    Attributes:
-    ----------------
-    fullpath: str
-    path to a file
-
-    folders: DictList
+    Attributes
+    ----------
+    fullpath : str
+        path to a file
+    folders : DictList
         subfolders of the DataFolder,
-        keys: str
-            names of subfolders
-        values: DataFolder
-            DataFolder objects of subfolders
 
-    files: list
+        keys : str
+            names of subfolders
+        values : DataFolder
+            DataFolder objects of subfolders
+    files : list
         paths to files in folder
 
-
-    Methods:
-    --------------
-    load():
+    Methods
+    -------
+    load()
         load a DataFolder
-
-    create_navigation:
+    create_navigation
         creates attributes for navigation like DataFolder.subfolder1.subfolder2.subfolder3
         if name of subfolder corresponds to existed attribute of DataFolder class, attribute will not be created!
         if name of subfolder contains spaces, dots or special characters, attribute will be created, but navigation
         to this subfolder will not work  - attribute error.
-
-    find(template, deep = False):
+    find(template, deep = False)
         searches for a files which names contain template.
         template should be string.
         if deep = True, searches in subfolders as well.
 
         return: list of files
-
-    go_to(*args):
+    go_to(*args)
         goes to the location
         DataFolder_path\\arg1\\arg2\\arg3...
 
@@ -93,7 +89,6 @@ class DataFolder:
             return filepath
         if location is a folder:
             return DataFolder(location)
-
     filenames()
         return filenames of files in folder
     """
@@ -320,21 +315,18 @@ class Output:
 
 class DataFileTemplate(Output):
     """
-    This class stores the data from any kind of nextnano data files with the
-    same structure.
+    This class stores the data from any kind of nextnano data files with the same structure.
+
     The stored data contains coordinates (.coords) and dependent variables (.variables).
     Each coordinate or variable would contain attributes like name, unit and value.
     For more information, see their specific documentation.
 
     The initialization of the class will execute the load method.
 
-    ...
-
     Parameters
     ----------
     fullpath : str
         path to the file.
-
 
     Attributes
     ----------
@@ -350,7 +342,7 @@ class DataFileTemplate(Output):
         extra information
     filename : str
         name with the file extension
-    filename_only :
+    filename_only
         name without the file extension
     extension : str
         file extension
@@ -359,18 +351,14 @@ class DataFileTemplate(Output):
     product : str
         flag about nextnano product to help to find the best loading routine
 
-
     Methods
     -------
     load(fullpath)
         load a data file
-
     get_coord(name)
         equivalent to self.coords[name]
-
     get_variable(name)
         equivalent to self.variables[name]
-
     """
 
     def __init__(self, fullpath, product=None, **loader_kwargs):
@@ -381,9 +369,7 @@ class DataFileTemplate(Output):
         self.load(**loader_kwargs)
 
     def load(self, **loader_kwargs):
-        """
-        Find the loader and update the stored information with the loaded data
-        """
+        """Find the loader and update the stored information with the loaded data"""
         loader = self.get_loader()
         df = loader(self.fullpath, **loader_kwargs)
         self.update_with_datafile(df)
@@ -392,6 +378,7 @@ class DataFileTemplate(Output):
     def update_with_datafile(self, datafile):
         """
         Copy .metadata, .coords and .variables of the specified datafile
+
         Copy other attributes like .vtk if there is any.
 
         Parameters
@@ -538,27 +525,35 @@ class DataFile(DataFileTemplate):
         """
         Save the data from the DataFile instance to a specified file in various formats.
 
-        Parameters:
-            filepath (str): The file path where the data will be saved.
-            format (str, optional): The format in which the data should be saved. Default is 'dat'.
-                Supported formats:
-                - 'dat' (for 1D files): Data is saved in a plain text format (.dat) with whitespace-separated values.
-                - 'VTKAscii' (for 2D/3D files): Data is saved in VTK ASCII format (.vtk) suitable for visualization tools.
-                - 'AvsAscii_one_file' (for 2D/3D files): Data is saved in AVS/Express ASCII format (.fld) for AVS/Express software.
+        Parameters
+        ----------
+        filepath : str
+            The file path where the data will be saved.
+        format : str, optional
+            The format in which the data should be saved. Default is 'dat'.
+            Supported formats:
 
-        Raises:
-            NotImplementedError: If the provided 'format' is not supported for saving.
+            - 'dat' (for 1D files): Data is saved in a plain text format (.dat) with whitespace-separated values.
+            - 'VTKAscii' (for 2D/3D files): Data is saved in VTK ASCII format (.vtk) suitable for visualization tools.
+            - 'AvsAscii_one_file' (for 2D/3D files): Data is saved in AVS/Express ASCII format (.fld) for AVS/Express software.
 
-        Notes:
-            - For the 'dat' format, the DataFile instance should be one-dimensional (ndim=1).
-            - The 'VTKAscii' format requires 'nextnanopy.utils.formatting' module for creating the VTK header.
-            - The 'AvsAscii_one_file' format requires the 'write_avsascii_one_file' function.
+        Raises
+        ------
+        NotImplementedError
+            If the provided 'format' is not supported for saving.
 
-        Example:
-            # Assuming `data_file` is an instance of the `DataFile` class
-            data_file.save('data_file.dat', format='dat')  # Save data in .dat format
-            data_file.save('data_file.vtk', format='VTKAscii')  # Save data in VTK ASCII format
-            data_file.save('data_file.fld', format='AvsAscii_one_file')  # Save data in AVS/Express ASCII format
+        Notes
+        -----
+        - For the 'dat' format, the DataFile instance should be one-dimensional (ndim=1).
+        - The 'VTKAscii' format requires 'nextnanopy.utils.formatting' module for creating the VTK header.
+        - The 'AvsAscii_one_file' format requires the 'write_avsascii_one_file' function.
+
+        Examples
+        --------
+        >>> # Assuming `data_file` is an instance of the `DataFile` class
+        >>> data_file.save('data_file.dat', format='dat')  # Save data in .dat format
+        >>> data_file.save('data_file.vtk', format='VTKAscii')  # Save data in VTK ASCII format
+        >>> data_file.save('data_file.fld', format='AvsAscii_one_file')  # Save data in AVS/Express ASCII format
         """
         # TODO  and AvsBinary (.fld)
         accepted_format = ["dat", "VTKAscii", "AvsAscii_one_file"]

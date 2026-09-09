@@ -1,4 +1,5 @@
-"""Write the nextnanopy config for the extracted nextnano++ portable build.
+"""
+Write the nextnanopy config for the extracted nextnano++ portable build.
 
 The portable build unpacks into a folder whose name is the release date (e.g.
 ``2026_07_03``), so it changes with every release and cannot be hardcoded. This
@@ -6,8 +7,8 @@ locates the install by globbing for the ``nextnano++`` subfolder under the
 extraction directory, then points the nextnanopy config at its executable,
 database and license. Only the nextnano++ product is configured.
 
-Environment
------------
+**Environment**
+
 NEXTNANO_PORTABLE_DIR
     Directory the portable build was extracted into (default: ``nextnano``).
 NEXTNANO_OUTPUT_DIR
@@ -22,7 +23,8 @@ import nextnanopy as nn
 
 
 def find_one(root: Path, pattern: str, what: str) -> Path:
-    """Return the single glob match for `pattern` under `root`, newest last.
+    """
+    Return the single glob match for `pattern` under `root`, newest last.
 
     Raises SystemExit with a readable message if nothing matches, so the CI
     step fails loudly instead of writing an empty path into the config.

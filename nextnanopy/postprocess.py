@@ -126,24 +126,32 @@ def simple_optimize(
     """
     The function that run sweeps of input file over the given variables space
     and finds optimum value of target value (target value is part of the result of simulation)
+
     Parameters
     ----------
-    input_file: str, input_file to execute
-    sweep_dict: dict with keys: variables names
-                          values: list of variables values
-    target_filepath: filepath to target value in output directory
-    target_variable: target variable name
-    target_number: the index number of the target value. If target_number = "all", the target is then list of values
-    goal: str
-            options: 'min' to minimize the target
-                      'max' to maximize the target
-                       'optimal' find the closest to optimal_target_value
+    input_file : str
+        input_file to execute
+    sweep_dict : dict
+        with keys: variables names
+        values: list of variables values
+    target_filepath
+        filepath to target value in output directory
+    target_variable
+        target variable name
+    target_number
+        the index number of the target value. If target_number = "all", the target is then list of values
+    goal : str
+        options:
+
+        - 'min' to minimize the target
+        - 'max' to maximize the target
+        - 'optimal' find the closest to optimal_target_value
     optimal_target_value
-    post_func: if specified post_func(target) will be optimize instead of target
+    post_func
+        if specified post_func(target) will be optimize instead of target
 
     Returns
     -------
-
     """
     best_value_initial_dict = {"min": np.inf, "max": -np.inf, "optimal": 0}
     var_names = sweep_dict.keys()
@@ -182,17 +190,23 @@ def simple_optimize(
 def calculate_CV(output_directory_path, bias1=None, bias2=None, total=False, net_charge_sign=-1):
     """
     Calculates CV characteristic based on integrated_density_electron.dat and integrated_density_hole.dat files in output_directory_path
+
     Parameters
     ----------
-    output_directory_path: str
-    bias1:  str, name of the first reference bias, optional
-    bias2: str, name of the second reference bias, optional
-    total: calculate in all regions together (sum of all regions) (for now only False is valid, otherwise return NotImplementedError)
+    output_directory_path : str
+    bias1 : str, optional
+        name of the first reference bias
+    bias2 : str, optional
+        name of the second reference bias
+    total
+        calculate in all regions together (sum of all regions) (for now only False is valid, otherwise return NotImplementedError)
 
     Returns
     -------
-    capacitance: numpy array with capacitance
-    voltage: numpy array with voltages
+    capacitance : numpy array
+        with capacitance
+    voltage : numpy array
+        with voltages
     """
 
     dfolder = DataFolder(output_directory_path)

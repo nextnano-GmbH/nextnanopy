@@ -182,11 +182,12 @@ class GdsPolygonsRaw:
     def clip(self, clip_box: tuple):
         """
         Clip polygons to a given box and resets the labels to default values.
+
         The clip_box is defined in the current unit of the object.
 
         Parameters
         ----------
-            clip_box: tuple (minx, miny, maxx, maxy)
+        clip_box : tuple (minx, miny, maxx, maxy)
         """
         minx, miny, maxx, maxy = clip_box
         clip_box = shapely.geometry.box(minx=minx, miny=miny, maxx=maxx, maxy=maxy)

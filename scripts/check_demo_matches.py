@@ -1,4 +1,5 @@
-"""Verify the bundled demo input matches the one shipped in the portable build.
+"""
+Verify the bundled demo input matches the one shipped in the portable build.
 
 The repo keeps a copy of nextnano's DoubleQuantumWell demo under
 ``templates/input files/`` and runs it as the CI smoke test. This checks that
@@ -8,8 +9,8 @@ fork. The comparison ignores line-ending and BOM encoding (``read_text`` folds
 newlines; ``utf-8-sig`` drops a leading BOM) so it does not fail on CRLF/LF
 differences introduced at checkout.
 
-Environment
------------
+**Environment**
+
 NEXTNANO_PORTABLE_DIR
     Directory the portable build was extracted into (default: ``nextnano``).
 """

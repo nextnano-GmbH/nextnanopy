@@ -29,6 +29,7 @@ from nextnanopy.utils.mycollections import DictList
 class InputFileTemplate:
     """
     This class stores and manipulates any kind of nextnano input files.
+
     For each nextnano product, the syntax is different but the core information
     is very similar like the variables that can be changed.
     This class contains useful methods such as to get a preview of the file or
@@ -36,8 +37,6 @@ class InputFileTemplate:
 
     The initialization of the class will execute the load method and setup the
     config file.
-
-    ...
 
     Parameters
     ----------
@@ -49,10 +48,8 @@ class InputFileTemplate:
         If it is None, it takes a copy of the process-wide configuration
         (nextnanopy.config) instead of reading a file; see Notes (default: None)
 
-
     Attributes
     ----------
-
     fullpath : str
         path to the file (default: None)
     configpath : str
@@ -67,7 +64,7 @@ class InputFileTemplate:
         raw_lines updated with the current input variable parameters
     filename : str
         name with the file extension (settable)
-    filename_only :
+    filename_only
         name without the file extension (settable)
     folder_input : str
         folder of the fullpath (settable)
@@ -75,51 +72,46 @@ class InputFileTemplate:
         folder where the simulated data is stored after execution
     product : str
         detected nextnano product when the file is loaded (default: 'not valid')
-    config: nextnano.NNConfig
+    config : nextnano.NNConfig
         the configuration this file runs on, bound at construction (see Notes).
         .default_command_args reads through it, so it is what execute() turns into
         command line arguments
-    execute_info: dict
+    execute_info : dict
         information after executing the file
-
-    Notes
-    -----
-    The configuration is bound at construction and never re-read afterwards. With no
-    `configpath`, the file takes a *copy* of the process-wide configuration
-    (`nextnanopy.config`) as it stands at that moment. Two things follow, both
-    intended:
-
-    - `nextnanopy.config.set(...)` reaches every input file built after it, and no
-      `save()` is needed for that -- saving only matters for other processes. It
-      reaches no file that already exists.
-    - The copy is this file's own. Editing `.config` here changes neither
-      `nextnanopy.config` nor any other input file, and later edits to
-      `nextnanopy.config` do not reach this file.
-
-    So configure first, then build the input files. To point a file that already
-    exists at a different configuration, assign `.config`; to build one on a config
-    file of its own, pass `configpath`.
 
     Methods
     -------
     preview(nums=True)
         print the text of the file.
-
     load(fullpath)
         load an input file
-
     save(fullpath=None, overwrite=False, automkdir=True)
         save the current information into a file.
-
     execute(**kwargs)
         execute the input file located at .fullpath
-
     get_variable(name)
         equivalent to self.variables[name]
-
     set_variable(name, value=None, comment=None)
         change the value and/or the comment of self.variable[name]
         If value or comment is None, it won't change that parameter
+
+    Notes
+    -----
+    The configuration is bound at construction and never re-read afterwards. With no
+    ``configpath``, the file takes a *copy* of the process-wide configuration
+    (``nextnanopy.config``) as it stands at that moment. Two things follow, both
+    intended:
+
+    - ``nextnanopy.config.set(...)`` reaches every input file built after it, and no
+      ``save()`` is needed for that -- saving only matters for other processes. It
+      reaches no file that already exists.
+    - The copy is this file's own. Editing ``.config`` here changes neither
+      ``nextnanopy.config`` nor any other input file, and later edits to
+      ``nextnanopy.config`` do not reach this file.
+
+    So configure first, then build the input files. To point a file that already
+    exists at a different configuration, assign ``.config``; to build one on a config
+    file of its own, pass ``configpath``.
     """
 
     _shared_temp_dir = None
@@ -238,12 +230,13 @@ class InputFileTemplate:
     def load(self, fullpath, text=None):
         """
         The steps are the following:
-            1. clear the current information
-            2. load the raw text (update .fullpath and .raw_lines)
-            3. find the nextnano product (update .product)
-            4. validate the input file
-            5. load the input variables (update .variables)
-            6. load content (when applicable)
+
+        1. clear the current information
+        2. load the raw text (update .fullpath and .raw_lines)
+        3. find the nextnano product (update .product)
+        4. validate the input file
+        5. load the input variables (update .variables)
+        6. load content (when applicable)
 
         Parameters
         ----------
@@ -284,10 +277,10 @@ class InputFileTemplate:
         automkdir : bool, optional
             If it is True, it will create the folder if it does not exist.
             (default is False)
-        temp: bool, optional
+        temp : bool, optional
             If it is True, it will save the file in a temporary location.
             (default is False)
-        content: bool, optional
+        content : bool, optional
             If it is True, it will save the parsed .content instead of .text.
             Comments are not preserved. It requires the file to be loaded with parse=True.
             (default is False)
@@ -323,6 +316,7 @@ class InputFileTemplate:
     ):
         """
         Execute the input file located at .fullpath
+
         Individual kwargs can be passed like 'license' or 'database'
         If no kwargs is specified, it will use the default values in .config
 
@@ -337,12 +331,15 @@ class InputFileTemplate:
         convergence_check_mode : str, optional
             works only for convergenceCheck = True
             options:
-                'pause': asks user how to proceed if simulation did not converge (default);
-                    if no interactive terminal is attached (e.g. CI, cluster jobs),
-                    behaves like 'terminate' instead of blocking on input
-                'terminate': terminate the script if the simulation did not converge
-                'continue': notify a user but continues execution of script
-        kwargs may contain:
+
+            - 'pause': asks user how to proceed if simulation did not converge (default);
+              if no interactive terminal is attached (e.g. CI, cluster jobs),
+              behaves like 'terminate' instead of blocking on input
+            - 'terminate': terminate the script if the simulation did not converge
+            - 'continue': notify a user but continues execution of script
+        **kwargs
+            kwargs may contain:
+
             exe : str, optional
                 path to executable
             license : str, optional
@@ -351,10 +348,11 @@ class InputFileTemplate:
                 path to database file
             outputdirectory : str, optional
                 path where to save the simulated data
-        and other parameters depending on the nextnano product.
-        For example, 'threads' is accepted by nextnano++.
-        See the documentation of the command line arguments of each nextnano product
-        on the online Manual (https://www.nextnano.de/manual/).
+
+            and other parameters depending on the nextnano product.
+            For example, 'threads' is accepted by nextnano++.
+            See the documentation of the command line arguments of each nextnano product
+            on the online Manual (https://www.nextnano.de/manual/).
 
         Notes
         -----
@@ -554,38 +552,41 @@ class InputFileTemplate:
 
 
 class InputFile(InputFileTemplate):
-    """Load a nextnano input file as the product-specific class that fits it.
+    """
+    Load a nextnano input file as the product-specific class that fits it.
 
-    `InputFile(path)` detects the product from the file's text and returns an instance of
-    that product's class (`nextnanopy.nnp.inputs.InputFile`, `nextnanopy.nn3.inputs.InputFile`,
-    and so on), or a bare `InputFileTemplate` if the text matches no known product.
+    ``InputFile(path)`` detects the product from the file's text and returns an instance of
+    that product's class (``nextnanopy.nnp.inputs.InputFile``,
+    ``nextnanopy.nn3.inputs.InputFile``, and so on), or a bare ``InputFileTemplate`` if the
+    text matches no known product.
 
-    Pass `text` to build from a string instead of from disk: `InputFile(text=...)` detects the
-    product from that text and never opens a file. `fullpath` is then just the name to give the
-    result (`InputFile(path, text=...)` reads nothing, but the object saves back to `path`).
-    With neither, there is nothing to detect and nothing to load, so an empty
-    `InputFileTemplate` comes back.
+    Pass ``text`` to build from a string instead of from disk: ``InputFile(text=...)`` detects
+    the product from that text and never opens a file. ``fullpath`` is then just the name to
+    give the result (``InputFile(path, text=...)`` reads nothing, but the object saves back to
+    ``path``). With neither, there is nothing to detect and nothing to load, so an empty
+    ``InputFileTemplate`` comes back.
 
-    Parameters are `InputFileTemplate`'s; see it for what they mean and for the API of the
+    Parameters are ``InputFileTemplate``'s; see it for what they mean and for the API of the
     object you get back.
 
-    **Building from a string: use `InputFile(text=...)`, not `InputFile()` + `.text = ...`.**
-    The latter cannot work: `InputFile()` has no text to detect from, so it returns a
-    product-agnostic `InputFileTemplate` whose `load_variables()` is a no-op, and assigning
-    `.text` afterwards cannot re-class the object it is called on. The text round-trips, but
-    `.variables` stays empty and `.product` stays `'not valid'`, silently. Dispatch happens in
-    `__new__` or not at all, so the contents must be supplied at construction. (Assigning
-    `.text` to a file loaded *from a path* is fine — that object is already a product class.)
+    **Building from a string: use InputFile(text=...), not InputFile() + .text = ....**
+    The latter cannot work: ``InputFile()`` has no text to detect from, so it returns a
+    product-agnostic ``InputFileTemplate`` whose ``load_variables()`` is a no-op, and assigning
+    ``.text`` afterwards cannot re-class the object it is called on. The text round-trips, but
+    ``.variables`` stays empty and ``.product`` stays ``'not valid'``, silently. Dispatch
+    happens in ``__new__`` or not at all, so the contents must be supplied at construction.
+    (Assigning ``.text`` to a file loaded *from a path* is fine — that object is already a
+    product class.)
 
-    Two limitations follow from dispatching in `__new__`, both deliberate:
+    Two limitations follow from dispatching in ``__new__``, both deliberate:
 
-    - **The result is not an `InputFile`.** The product classes are siblings of this class,
-      not subclasses, so `isinstance(InputFile(path), InputFile)` is `False`. Check against,
-      annotate with, and subclass `InputFileTemplate` — the base every product class shares.
-    - **This class cannot be subclassed.** `__new__` picks the class from the file's contents
-      and ignores `cls`, so a subclass would be silently discarded; it raises `TypeError`
+    - **The result is not an InputFile.** The product classes are siblings of this class,
+      not subclasses, so ``isinstance(InputFile(path), InputFile)`` is ``False``. Check against,
+      annotate with, and subclass ``InputFileTemplate`` — the base every product class shares.
+    - **This class cannot be subclassed.** ``__new__`` picks the class from the file's contents
+      and ignores ``cls``, so a subclass would be silently discarded; it raises ``TypeError``
       instead. To extend one product, subclass that product's class; to extend all of them,
-      subclass `InputFileTemplate`.
+      subclass ``InputFileTemplate``.
     """
 
     # Takes exactly InputFileTemplate.__init__'s parameters, and must keep doing so:
@@ -616,73 +617,66 @@ class InputFile(InputFileTemplate):
 class ExecutionQueue(threading.Thread):
     """
     This class take InputFiles and add them in the execution queue.
-    Depending on limit_parallel, InputFiles are executed in parallel or sequentially.
 
+    Depending on limit_parallel, InputFiles are executed in parallel or sequentially.
 
     Parameters
     ----------
-    limit_parallel: int
+    limit_parallel : int
         number of InputFiles to be executed in parallel (default: 1)
     terminate_empty : bool
         If True, terminates once all added files are executed and logged.
         If you want to add more input files even after execution of all added in the beginning, use terminate_empty = False
         Then the ExecutionQueue has to be stopped manually later (ExecutionQueue.stop())
-    convergenceCheck: bool
+    convergenceCheck : bool
         see convergenceCheck in InputFile
-
-    **execution_kwargs: parameters to be taken by InputFile.execute()
-
-
-
+    **execution_kwargs
+        parameters to be taken by InputFile.execute()
 
     Attributes
     ----------
-    waiting_queue: queue.Queue
+    waiting_queue : queue.Queue
         queue of InputFile objects to be executed
-    started: list
+    started : list
         list of (simulation_info:dict, InputFile) currently executing
-
-    finished: list
+    finished : list
         list of simulation_infos for finished simulations
-
-    stop_when_empty: bool
+    stop_when_empty : bool
         see terminate_empty parameter
-    daemon: bool
+    daemon : bool
         see threading.Thread.daemon
-    poll_interval: float
+    poll_interval : float
         seconds between checks for finished simulations while the queue is running
         (class attribute, default 0.1)
 
     Methods
-    ----------- for user
+    -------
+    for user:
+
     add(*input_files)
         adds InputFiles to queue
-
     start()
         start the thread (i.e. execution)
         see threading.Thread.start()
-
     stop()
         stop the thread (once all added files are executed)
         only necessary if terminate_empty = True
 
+    internal (or for advanced users):
 
-    -------internal (or for advanced users)
     all_done()
         return True if all execution and logging are finished
-
     add_execution()
         pop an InputFile from self.waiting_queue, execute and add to self.started
-
     log_finished()
         finish logging for finished execution in self.started
-
     run()
         commands to be run upon start():
+
             pop simulation from queue and execute
             log the simulation if some are finished from self.started
-        see threading.Thread.run()
 
+        see threading.Thread.run()
     """
 
     poll_interval = 0.1
@@ -800,7 +794,7 @@ class ExecutionPool:
         maximum number of simulations running simultaneously (default: 1).
         Same spelling as Sweep.execute_sweep(parallel_limit=...); note that
         ExecutionQueue calls this limit_parallel.
-    **execution_kwargs :
+    **execution_kwargs
         forwarded to InputFile.execute() of every added file: outputdirectory,
         show_log, convergenceCheck, convergence_check_mode, exe, license,
         database, ... With parallel_limit > 1 and show_log=True the console
@@ -917,31 +911,28 @@ class Sweep:
     """
     This class give a user possibility to run multiple simulations (sweep) over defined variables in the input file.
 
-
-    Parameters:
-    -------------------
-    variables_to_sweep: dict
+    Parameters
+    ----------
+    variables_to_sweep : dict
         Dict of variables to sweep in the form of {name1:values1,name2:values2...}
         values should be an iterable object (ideally list)
-    fullpath: str
+    fullpath : str
         defined as for InputFile
-    configpath: str
+    configpath : str
         defined as for input files
 
-
-    Attributes:
-    -----------
-    input_file: InputFile
+    Attributes
+    ----------
+    input_file : InputFile
         the parsed prototype input file whose variables are swept
 
-    Methods:
-    --------
+    Methods
+    -------
     save_sweep()
         creates an output folder
         creates input files for all combinations of sweep variables
-    execute_sweep():
+    execute_sweep()
         execute created input files and saves information to output folder
-
     """
 
     def __init__(self, variables_to_sweep, fullpath=None, configpath=None):
@@ -1002,13 +993,16 @@ class Sweep:
         variables_comb_screen_fn: Callable[..., Any] = None,
     ):
         """
-
         Parameters
         ----------
-        delete_old_files: if True, deletes files created in previous sweeps
-        round_decimal: number of digits to round in the output folder names
-        integer_only_in_name: if True, only integer values are used in the output folder names
-        temp: if True, input files are saved in temporary directory
+        delete_old_files
+            if True, deletes files created in previous sweeps
+        round_decimal
+            number of digits to round in the output folder names
+        integer_only_in_name
+            if True, only integer values are used in the output folder names
+        temp
+            if True, input files are saved in temporary directory
 
         Returns
         -------
@@ -1119,11 +1113,12 @@ class Sweep:
         convergence_check_mode : str, optional
             works only for convergenceCheck = True
             options:
-                'pause': asks user how to proceed if simulation did not converge (default);
-                    if no interactive terminal is attached (e.g. CI, cluster jobs),
-                    behaves like 'terminate' instead of blocking on input
-                'terminate': terminate the script if the simulation did not converge
-                'continue': notify a user but continues execution of script
+
+            - 'pause': asks user how to proceed if simulation did not converge (default);
+              if no interactive terminal is attached (e.g. CI, cluster jobs),
+              behaves like 'terminate' instead of blocking on input
+            - 'terminate': terminate the script if the simulation did not converge
+            - 'continue': notify a user but continues execution of script
         parallel_limit : int, optional
             number of simulations to run simultaneously. Especially useful for simple simulations which might be more efficiently run in parallel. Be aware that
             some nextnano solvers parallelize computations internally in threads (controlled by --threads in nextnanopy config). To avoid unexpected behaviour and
@@ -1132,8 +1127,8 @@ class Sweep:
         separate_sweep_dir : bool, optional
             if True, creates separate directory to store subdirectories of the sweep simulation. If False, stores all directories without separate directory.
             default True
-        **kwargs :
-            see **kwargs of InputFile.execute()
+        **kwargs
+            see ``**kwargs`` of InputFile.execute()
         """
         try:
             output_directory = kwargs["outputdirectory"]
@@ -1207,16 +1202,11 @@ class Sweep:
         return self.execute_sweep(*args, **kwargs)
 
     def create_infodict_files(self):
-        """
-        Creates files with variables under sweep in output directories
-
-        """
+        """Creates files with variables under sweep in output directories"""
         raise NotImplementedError
 
     def create_infodict_json(self):
-        """
-        Creates json file to store infodict
-        """
+        """Creates json file to store infodict"""
         import json
 
         filepath = os.path.join(self.sweep_output_directory, "sweep_infodict.json")

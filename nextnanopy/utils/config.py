@@ -10,8 +10,6 @@ class Config:
 
     The initialization of the class will execute the load method.
 
-    ...
-
     Parameters
     ----------
     fullpath : str
@@ -24,30 +22,8 @@ class Config:
         In the latter dict, the keys are the name of the options and the values
         are methods to convert the raw information (e.g: int)
 
-    Raises
-    ------
-    ValueError
-        if fullpath is empty or None.
-
-    Notes
-    -----
-    Known bug: a value containing a '%' can be loaded but never saved. Reads go through
-    the parser's raw store, so the '%' survives, but save() -> config_to_configparser()
-    assigns through configparser's default BasicInterpolation, which rejects a lone '%':
-
-        config.set('nextnano++', 'outputdirectory', r'C:\\Users\\%USERNAME%\\out')
-        config.save()   # ValueError: invalid interpolation syntax ... at position 9
-
-    This bites real paths (%USERNAME%, %APPDATA%, an output folder named 50%_doping).
-    The fix is one argument -- build the parser as ConfigParser(interpolation=None); the
-    values here are filesystem paths, never templates, so interpolation buys nothing.
-    Left unfixed deliberately: no user has hit it. Apply the one argument if one ever
-    does, and stop there -- nothing else in this class needs to change.
-    See .local_dev/decisions_later.md for the full write-up.
-
     Attributes
     ----------
-
     fullpath : str
         path to the file
     config : dict
@@ -63,30 +39,43 @@ class Config:
     -------
     preview()
         print the text of the file.
-
     load()
         load the file located at .fullpath
-
     save(fullpath=None)
         save the current configuration into a file. (default is None)
         If it is None, it will use the current .fullpath
-
     get_options(section)
         get the list of option names of a given section
-
     config_to_configparser()
         copy the information in .config to .configparser
-
     set(section, option, value)
         change the value of a given option of a section in .config
         it applies the validator if there is any
-
     get(section, option)
         return the value of a given option of a section in .config
-
     add_section(section)
         create a new section in the configuration
 
+    Raises
+    ------
+    ValueError
+        if fullpath is empty or None.
+
+    Notes
+    -----
+    Known bug: a value containing a '%' can be loaded but never saved. Reads go through
+    the parser's raw store, so the '%' survives, but save() -> config_to_configparser()
+    assigns through configparser's default BasicInterpolation, which rejects a lone '%'::
+
+        config.set('nextnano++', 'outputdirectory', r'C:\\Users\\%USERNAME%\\out')
+        config.save()   # ValueError: invalid interpolation syntax ... at position 9
+
+    This bites real paths (%USERNAME%, %APPDATA%, an output folder named 50%_doping).
+    The fix is one argument -- build the parser as ConfigParser(interpolation=None); the
+    values here are filesystem paths, never templates, so interpolation buys nothing.
+    Left unfixed deliberately: no user has hit it. Apply the one argument if one ever
+    does, and stop there -- nothing else in this class needs to change.
+    See .local_dev/decisions_later.md for the full write-up.
     """
 
     def __init__(self, fullpath, validators=None):
