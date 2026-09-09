@@ -87,7 +87,7 @@ class InputFileTemplate:
         load an input file
     save(fullpath=None, overwrite=False, automkdir=True)
         save the current information into a file.
-    execute(**kwargs)
+    ``execute(**kwargs)``
         execute the input file located at .fullpath
     get_variable(name)
         equivalent to self.variables[name]
@@ -382,8 +382,8 @@ class InputFileTemplate:
         the shell wrapper; the running simulation is NOT stopped.
 
         Where the output goes is decided by overwrite/create_subdirectory, which are
-        parameters rather than members of **kwargs: they steer nextnanopy, not the
-        simulator, so they are also not config options. .folder_output holds the
+        parameters rather than members of ``**kwargs``: they steer nextnanopy, not
+        the simulator, so they are also not config options. .folder_output holds the
         directory that was chosen once the run has started.
         """
 
@@ -684,7 +684,7 @@ class ExecutionQueue(threading.Thread):
     -------
     for user:
 
-    add(*input_files)
+    ``add(*input_files)``
         adds InputFiles to queue
     start()
         start the thread (i.e. execution)
@@ -845,7 +845,7 @@ class ExecutionPool:
 
     Methods
     -------
-    add(*input_files)
+    ``add(*input_files)``
         hand InputFiles to the pool. Buffered before start(), submitted to the
         workers immediately after it.
     start()

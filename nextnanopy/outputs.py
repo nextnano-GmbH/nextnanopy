@@ -81,7 +81,7 @@ class DataFolder:
         if deep = True, searches in subfolders as well.
 
         return: list of files
-    go_to(*args)
+    ``go_to(*args)``
         goes to the location
         DataFolder_path\\arg1\\arg2\\arg3...
 
