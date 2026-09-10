@@ -1016,30 +1016,74 @@ class ExecutionPool:
 
 class Sweep:
     """
-    This class give a user possibility to run multiple simulations (sweep) over defined variables in the input file.
+    A parameter sweep over the input variables of one input file.
+
+    One simulation is run for every combination of the swept values, combined as a
+    Cartesian product: sweeping two variables with 3 and 4 values gives 12
+    simulations.
+
+    Building and running are separate steps. `save()` writes one input file per
+    combination, and `execute()` runs those files and collects their output.
+    Calling `execute()` on a sweep that was never saved does not raise: it warns
+    that no input files were created and returns.
 
     Parameters
     ----------
-    variables_to_sweep : dict
-        Dict of variables to sweep in the form of {name1:values1,name2:values2...}
-        values should be an iterable object (ideally list)
-    fullpath : str
-        defined as for InputFile
-    configpath : str
-        defined as for input files
+    variables_to_sweep : dict of {str : list}
+        Values to sweep for each input variable, keyed by variable name, as
+        `{'name1': values1, 'name2': values2}`. Every name must already be a
+        variable of the input file, and every value must be iterable. A single
+        string counts as iterable and sweeps its characters, so wrap single
+        values in a list.
+    fullpath : str or pathlib.Path, default=None
+        Path to the input file to sweep, as for `InputFile`. Without it there are
+        no variables to sweep over, so only an empty `variables_to_sweep` is
+        accepted.
+    configpath : str or pathlib.Path, default=None
+        Path to the config file, as for `InputFile`. It is handed to every input
+        file the sweep generates, so they all run on the same configuration as
+        the sweep itself.
 
     Attributes
     ----------
-    input_file : InputFile
-        the parsed prototype input file whose variables are swept
+    input_file : InputFileTemplate
+        The prototype input file whose variables are swept, parsed once at
+        construction.
+    var_sweep : dict of {str : list}
+        The validated `variables_to_sweep`, keyed by variable name.
+    input_files : list of InputFileTemplate
+        One input file per swept combination. Empty until `save()` has run, which
+        replaces the list on every call.
+    sweep_output_directory : str
+        Directory holding the output of every simulation of the sweep. None until
+        `execute()` has run.
+    sweep_infodict : DictList of dict
+        Variable combination of each generated input file, keyed by that file's
+        path. Empty until `save()` has run.
+    sweep_output_infodict : DictList of dict
+        The same combinations keyed by output folder instead. This is what is
+        written to `sweep_infodict.json` in the sweep directory. Empty until
+        `execute()` has run.
+    fullpath : str or pathlib.Path
+        Path of the input file being swept. Read-only.
+    filename_only : str
+        File name of the input file without the extension. Read-only.
+    product : str
+        Detected nextnano product of the input file. Read-only.
+    config : NNConfig
+        The configuration `.input_file` runs on. Settable, but the assignment
+        reaches only `.input_file`: the files `save()` generates take their
+        configuration from the `configpath` given at construction.
+    configpath : str or pathlib.Path
+        Path of the configuration file behind `.config`. Read-only.
 
-    Methods
-    -------
-    save_sweep()
-        creates an output folder
-        creates input files for all combinations of sweep variables
-    execute_sweep()
-        execute created input files and saves information to output folder
+
+    Raises
+        ------
+        ValueError
+            If a name in `variables_to_sweep` is not a variable of the input file.
+        TypeError
+            If a value in `variables_to_sweep` is not iterable.
     """
 
     def __init__(self, variables_to_sweep, fullpath=None, configpath=None):
@@ -1054,6 +1098,7 @@ class Sweep:
         # input file (variables to validate against, fullpath, config, product)
         # comes from this single object instead of a throwaway plus a base-class
         # re-parse.
+        # TODO downgrade to private self._input_file
         self.input_file = InputFile(fullpath=fullpath, configpath=configpath)
         if set(variables_to_sweep.keys()).issubset(self.input_file.variables.keys()):
             self.var_sweep = variables_to_sweep
@@ -1100,20 +1145,39 @@ class Sweep:
         variables_comb_screen_fn: Callable[..., Any] = None,
     ):
         """
+        Write and save on disk one input file per swept combination.
+
+        `save()` is the preferred name for this method. `save_sweep()` is kept for
+        compatibility and will be deprecated.
+
+        The files are written next to the input file being swept, with the swept
+        values appended to the name (`example__BIAS_1.5_.in`), and are collected in
+        `.input_files` and `.sweep_infodict`.
+
         Parameters
         ----------
-        delete_old_files
-            if True, deletes files created in previous sweeps
-        round_decimal
-            number of digits to round in the output folder names
-        integer_only_in_name
-            if True, only integer values are used in the output folder names
-        temp
-            if True, input files are saved in temporary directory
+        delete_old_files : bool, default=True
+            If True, delete the input files generated by an earlier `save()` on
+            this sweep before writing the new ones. Files from other sweeps are
+            never touched.
+        round_decimal : int, default=8
+            Number of decimals the swept values are rounded to in the file names.
+            Values that are strings are used as they are.
+        integer_only_in_name : bool, default=False
+            If True, name the files after the input file with an index appended
+            (`example_0.in`, `example_1.in`, ...) instead of after the swept values.
+        temp : bool, default=False
+            If True, write the files into a temporary folder that is removed when
+            the process exits, instead of next to the input file.
+        variables_comb_screen_fn : callable, default=None
+            Filter for the combinations to generate. It is called with one
+            combination of values at a time, in the order of the swept variables,
+            and the combination is kept when the call returns true. If omitted,
+            every combination is generated.
 
-        Returns
-        -------
-        None
+        See Also
+        --------
+        save : Preferred name for this method.
         """
         if delete_old_files:
             for inputfile in self.input_files:
@@ -1199,48 +1263,80 @@ class Sweep:
         **kwargs,
     ):
         """
-        Execute created input files and saves information to output folder.
+        Execute the input files written by `save()`.
+
+        `execute()` is the preferred name for this method. `execute_sweep()` is kept
+        for compatibility and will be deprecated.
+
+        Each input file is run in turn, or `parallel_limit` at a time. The output is
+        collected under `.sweep_output_directory` together with `sweep_info.txt` and
+        `sweep_infodict.json`, and every simulation's variable combination is
+        recorded in `.sweep_output_infodict`.
 
         Parameters
         ----------
-        delete_input_files : bool, optional
-            if True, input_files are deleted after execution. Default is False.
-        overwrite : bool, optional
-            if True, the output overwrites the old output data. If False, execution will create a new output folder
-            (with the unique name, created by adding an integer to the foldername). Default is False.
-            It applies to the sweep folder and to the folder of every simulation in
-            it, so a sweep run with overwrite=False writes over no earlier output at
-            either level. The per-file subfolder itself is always created: it is what
-            keeps the sweep points apart.
-        show_log : bool, optional
-            if True, the simulation log is displayed in the console. If False, the count of current simulation is displayed without log.
-            Default is True.
-            Note that the log file is always saved in the output folders regardless of this option.
-        convergenceCheck : bool, optional
-            if True, nextnanopy scans the log file of the simulation performed and check whether the solution has converged.
-            If it did not converge, nextnanopy warns you and ask if you want to proceed with postprocessing.
-            Note that non-converged solutions are not reliable and further calculation and/or visualization from them do not make much sense.
-            Default is False.
-        convergence_check_mode : str, optional
-            works only for convergenceCheck = True
-            options:
+        delete_input_files : bool, default=False
+            If True, delete the generated input files once they have been executed.
+        overwrite : bool, default=False
+            If True, the output overwrites the old output data. If False, execution
+            creates a new output folder, adding an integer to the folder name. It
+            applies to the sweep folder and to the folder of every simulation in it,
+            so a sweep run with `overwrite=False` writes over no earlier output at
+            either level. The per-file subfolder itself is always created: it is
+            what keeps the sweep points apart.
+        show_log : bool, default=True
+            If True, the simulation log is displayed in the console. If False, only
+            the count of the current simulation is displayed. The log file is
+            written to the output folder either way.
+        convergenceCheck : bool, default=False
+            If True, check the log of every simulation for convergence once it has
+            finished. What happens on a simulation that did not converge is decided
+            by `convergence_check_mode`.
+        convergence_check_mode : {'pause', 'terminate', 'continue'}
+            What to do when a simulation did not converge. Only used when
+            `convergenceCheck` is True.
 
-            - 'pause': asks user how to proceed if simulation did not converge (default);
-              if no interactive terminal is attached (e.g. CI, cluster jobs),
-              behaves like 'terminate' instead of blocking on input
-            - 'terminate': terminate the script if the simulation did not converge
-            - 'continue': notify a user but continues execution of script
-        parallel_limit : int, optional
-            number of simulations to run simultaneously. Especially useful for simple simulations which might be more efficiently run in parallel. Be aware that
-            some nextnano solvers parallelize computations internally in threads (controlled by --threads in nextnanopy config). To avoid unexpected behaviour and
-            not desirable decrease of simulation speed use the rule: parallel_limit*threads<= number of physical cores of the machine
-            default 1
-        separate_sweep_dir : bool, optional
-            if True, creates separate directory to store subdirectories of the sweep simulation. If False, stores all directories without separate directory.
-            default True
-        **kwargs
-            see ``**kwargs`` of InputFile.execute()
+            - 'pause': ask the user how to proceed. If no interactive terminal is
+              attached (e.g. CI, cluster jobs), behaves like 'terminate' instead of
+              blocking on input.
+            - 'terminate': terminate the script.
+            - 'continue': notify the user but continue the script.
+        parallel_limit : int, default=1
+            Number of simulations to run simultaneously. Especially useful for
+            simple simulations, which may run more efficiently in parallel. Be
+            aware that some nextnano solvers parallelize computations internally in
+            threads (controlled by `threads` in the nextnanopy configuration): to
+            avoid an undesirable slowdown, keep `parallel_limit * threads` at or
+            below the number of physical cores of the machine.
+        separate_sweep_dir : bool, default=True
+            If True, create one directory for the sweep and put every simulation's
+            output folder inside it. If False, the output folders are created
+            directly in the output directory.
+        **kwargs : dict
+            Forwarded to `InputFile.execute()` for every simulation.
+            `outputdirectory` is the exception: it is taken as the parent of the
+            sweep directory rather than passed on, and defaults to the
+            `outputdirectory` of `.config`.
+
+        Raises
+        ------
+        RuntimeError
+            If `convergenceCheck` is True and a simulation did not converge, unless
+            `convergence_check_mode` is 'continue'. The sweep stops at that
+            simulation and the remaining input files are not executed.
+
+        Warns
+        -----
+        UserWarning
+            If no input files were created, i.e. `save()` has not been called.
+            Nothing is executed, but the sweep directory has already been created.
+
+        See Also
+        --------
+        InputFile.execute : Meaning of the arguments passed on to each simulation.
+        execute : Preferred name for this method.
         """
+
         try:
             output_directory = kwargs["outputdirectory"]
             del kwargs["outputdirectory"]
@@ -1315,11 +1411,11 @@ class Sweep:
         return self.execute_sweep(*args, **kwargs)
 
     def create_infodict_files(self):
-        """Creates files with variables under sweep in output directories"""
+        # """Creates files with variables under sweep in output directories"""
         raise NotImplementedError
 
     def create_infodict_json(self):
-        """Creates json file to store infodict"""
+        # """Creates json file to store infodict"""
         import json
 
         filepath = os.path.join(self.sweep_output_directory, "sweep_infodict.json")
