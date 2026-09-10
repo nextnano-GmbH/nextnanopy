@@ -89,7 +89,7 @@ class InputFileTemplate:
     config : NNConfig
         The configuration this file runs on, bound at construction (see Notes).
     execute_info : dict
-        Information about the last execution. Empty until `.execute()` has run.
+        Information about the last execution. Empty until `execute()` has run.
 
     Notes
     -----
@@ -661,39 +661,43 @@ class InputFile(InputFileTemplate):
     """
     Load a nextnano input file as the product-specific class that fits it.
 
-    ``InputFile(path)`` detects the product from the file's text and returns an instance of
-    that product's class (``nextnanopy.nnp.inputs.InputFile``,
-    ``nextnanopy.nn3.inputs.InputFile``, and so on), or a bare ``InputFileTemplate`` if the
+    ``InputFile(fullpath)`` detects the product from the file's text and returns an
+    instance of that product's class (`nextnanopy.nnp.inputs.InputFile`,
+    `nextnanopy.nn3.inputs.InputFile`, and so on), or a bare `.InputFileTemplate` if the
     text matches no known product.
 
-    Pass ``text`` to build from a string instead of from disk: ``InputFile(text=...)`` detects
-    the product from that text and never opens a file. ``fullpath`` is then just the name to
-    give the result (``InputFile(path, text=...)`` reads nothing, but the object saves back to
-    ``path``). With neither, there is nothing to detect and nothing to load, so an empty
-    ``InputFileTemplate`` comes back.
-
-    **Building from a string: use InputFile(text=...), not InputFile() + .text = ....**
-    The latter cannot work: ``InputFile()`` has no text to detect from, so it returns a
-    product-agnostic ``InputFileTemplate`` whose ``load_variables()`` is a no-op, and assigning
-    ``.text`` afterwards cannot re-class the object it is called on. The text round-trips, but
-    ``.variables`` stays empty and ``.product`` stays ``'not valid'``, silently. Dispatch
-    happens in ``__new__`` or not at all, so the contents must be supplied at construction.
-    (Assigning ``.text`` to a file loaded *from a path* is fine — that object is already a
-    product class.)
-
-    Two limitations follow from dispatching in ``__new__``, both deliberate:
-
-    - **The result is not an InputFile.** The product classes are siblings of this class,
-      not subclasses, so ``isinstance(InputFile(path), InputFile)`` is ``False``. Check against,
-      annotate with, and subclass ``InputFileTemplate`` — the base every product class shares.
-    - **This class cannot be subclassed.** ``__new__`` picks the class from the file's contents
-      and ignores ``cls``, so a subclass would be silently discarded; it raises ``TypeError``
-      instead. To extend one product, subclass that product's class; to extend all of them,
-      subclass ``InputFileTemplate``.
+    Pass `text` to build from a string instead of from disk: ``InputFile(text=...)`` detects
+    the product from that text and never opens a file. `fullpath` is then just the name to
+    give the result — ``InputFile(fullpath, text=...)`` reads nothing, but `save()` writes
+    there. With neither, there is nothing to detect and nothing to load, so an empty
+    `.InputFileTemplate` comes back.
 
     See Also
     --------
-    InputFileTemplate : Parameters, attributes and methods of the object returned.
+    .InputFileTemplate : Parameters, attributes and methods of the object returned.
+
+    Notes
+    -----
+    **Build from a string at construction time, not by assignment afterwards.**
+    ``InputFile(text=...)`` works; ``InputFile()`` followed by ``.text = ...`` does not.
+    The latter cannot work: ``InputFile()`` has no text to detect from, so it returns a
+    product-agnostic `.InputFileTemplate` whose `load_variables()` is a no-op, and assigning
+    `.text` afterwards cannot re-class the object it is called on. The text round-trips, but
+    `.variables` stays empty and `.product` stays ``'not valid'``, silently. Dispatch
+    happens in `__new__` or not at all, so the contents must be supplied at construction.
+    (Assigning `.text` to a file loaded *from a path* is fine — that object is already a
+    product class.)
+
+    Two limitations follow from dispatching in `__new__`, both deliberate:
+
+    - **The result is not an InputFile.** The product classes are siblings of this class,
+      not subclasses, so ``isinstance(InputFile(fullpath), InputFile)`` is ``False``. Check
+      against, annotate with, and subclass `.InputFileTemplate` — the base every product
+      class shares.
+    - **This class cannot be subclassed.** `__new__` picks the class from the file's contents
+      and ignores `cls`, so a subclass would be silently discarded; it raises `TypeError`
+      instead. To extend one product, subclass that product's class; to extend all of them,
+      subclass `.InputFileTemplate`.
     """
 
     # Takes exactly InputFileTemplate.__init__'s parameters, and must keep doing so:
