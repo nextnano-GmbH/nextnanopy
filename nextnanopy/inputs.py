@@ -59,30 +59,30 @@ class InputFileTemplate:
     fullpath : str or pathlib.Path
         Path to the file.
     configpath : str or pathlib.Path
-        Path of the configuration file behind `.config`. Read-only; assign
-        `.config` to point this file at a different configuration.
+        Path of the configuration file behind `config`. Read-only; assign
+        `config` to point this file at a different configuration.
     variables : DictList of InputVariable
         Input variables defined in the file, keyed by name.
     raw_lines : list of str
         Each line of the file as it was loaded.
     raw_text : str
-        The `.raw_lines` as one string, without the current input variable values
+        The `raw_lines` as one string, without the current input variable values
         applied. Read-only.
     text : str
         Text of the file with the current variable values applied. Assigning
-        replaces `.raw_lines` and reloads `.variables`, but does not re-detect
-        `.product`.
+        replaces `raw_lines` and reloads `variables`, but does not re-detect
+        `product`.
     lines : list of str
-        The `.raw_lines` updated with the current input variable parameters.
+        The `raw_lines` updated with the current input variable parameters.
     filename : str
         File name with the extension.
-        Assigning changes `.fullpath` to the same folder with the new name.
+        Assigning changes `fullpath` to the same folder with the new name.
     filename_only : str
         File name without the extension.
-        Assigning changes `.fullpath` to the new name, keeping the folder and the extension.
+        Assigning changes `fullpath` to the new name, keeping the folder and the extension.
     folder_input : str
         Folder containing the input file.
-        Assigning changes `.fullpath` to the new folder, keeping the file name.
+        Assigning changes `fullpath` to the new folder, keeping the file name.
     product : str
         Detected nextnano product when the file is loaded.
         Defaults to 'not valid' if the product is not recognised.
@@ -243,11 +243,11 @@ class InputFileTemplate:
 
         The steps are the following:
 
-        1. Clear `.raw_lines`, `.variables` and `.fullpath`.
-        2. Load the raw text (updates `.fullpath` and `.raw_lines`).
-        3. Find the nextnano product (updates `.product`).
+        1. Clear the `raw_lines`, `variables` and `fullpath` attributes.
+        2. Load the raw text (updates the `fullpath` and `raw_lines` attributes).
+        3. Find the nextnano product (updates `product`).
         4. Validate the input file.
-        5. Load the input variables (updates `.variables`).
+        5. Load the input variables (updates `variables`).
         6. Load the content, when applicable.
 
         Parameters
@@ -284,13 +284,13 @@ class InputFileTemplate:
         """
         Save the current information into a file.
 
-        `.fullpath` is updated to the path that was written.
+        The `fullpath` attribute is updated to the path that was written.
 
         Parameters
         ----------
         fullpath : str or pathlib.Path, default=None
             Path including the file name where it will be saved. If None, the
-            current `.fullpath` is used.
+            `fullpath` attribute is used.
         overwrite : bool, default=False
             If False, an index is appended to the file name when it is already
             taken (`example.nnp`, then `example_0.nnp`, `example_1.nnp`, ...), so an
@@ -300,11 +300,11 @@ class InputFileTemplate:
             If True, create the parent folder if it does not exist.
         temp : bool, default=False
             If True, save into a temporary folder that is removed when the process
-            exits, keeping the current `.filename`. Ignored with a warning when
+            exits, keeping the current `filename`. Ignored with a warning when
             `fullpath` is given.
         content : bool, default=False
             Experimental feature, refrain from using it.
-            If True, save the parsed `.content` instead of `.text`. Comments are
+            If True, save the parsed `content` attribute instead of `text`. Comments are
             not preserved. It requires the file to be loaded with `parse=True`.
 
         Returns
@@ -316,8 +316,8 @@ class InputFileTemplate:
         Raises
         ------
         ValueError
-            If neither `fullpath` nor `.fullpath` is set, or if `content` is True
-            and the file was not loaded with `parse=True`.
+            If neither the `fullpath` argument nor the `fullpath` attribute is set,
+            or if `content` is True and the file was not loaded with `parse=True`.
         FileNotFoundError
             If `automkdir` is False and the parent folder does not exist.
         """
@@ -358,10 +358,10 @@ class InputFileTemplate:
         **kwargs,
     ):
         """
-        Execute the input file located at `.fullpath`.
+        Execute the input file located at `fullpath`.
 
         Individual kwargs can be passed like `license` or `database`; anything not
-        given comes from `.config`.
+        given comes from `config`.
 
         Parameters
         ----------
@@ -395,7 +395,7 @@ class InputFileTemplate:
             `outputdirectory` itself.
         **kwargs : dict
             The nextnano product's own command line arguments, passed on as they
-            are. Anything not given here comes from `.config`. `kwargs` may contain:
+            are. Anything not given here comes from `config`. `kwargs` may contain:
 
             exe : str, optional
                 Path to the executable.
@@ -415,16 +415,16 @@ class InputFileTemplate:
         -------
         dict
             Information about the started simulation, also stored in
-            `.execute_info`. Keys: 'process', 'outputdirectory', 'filename',
+            `execute_info`. Keys: 'process', 'outputdirectory', 'filename',
             'logfile', 'cmd', 'wdir', 'queue', 'tout', 'terr'.
 
         Raises
         ------
         ValueError
-            If `.fullpath` is empty or is not an existing file, or if
+            If `fullpath` is empty or is not an existing file, or if
             `convergence_check_mode` is not one of the values listed above.
         FileNotFoundError
-            If the executable path in `.config` is empty or invalid.
+            If the executable path in `config` is empty or invalid.
         RuntimeError
             If `convergenceCheck` is True and the simulation was terminated or did
             not converge, unless `convergence_check_mode` is 'continue'.
@@ -435,12 +435,12 @@ class InputFileTemplate:
         -----
         The simulation is launched through the system shell, so
         `execute_info['process']` is the shell process, not the simulator
-        itself. On Windows, calling `.kill()`/`.terminate()` on it stops only
+        itself. On Windows, calling `kill()`/`terminate()` on it stops only
         the shell wrapper; the running simulation is NOT stopped.
 
         Where the output goes is decided by `overwrite`/`create_subdirectory`, which
         are parameters rather than members of ``**kwargs``: they steer nextnanopy,
-        not the simulator, so they are also not config options. `.folder_output`
+        not the simulator, so they are also not config options. `folder_output`
         holds the directory that was chosen once the run has started.
         """
 
@@ -572,8 +572,8 @@ class InputFileTemplate:
         """
         Return the input variable called `name`.
 
-        Equivalent to `.variables[name]`, except that only lookup by name is
-        supported: `.variables` also accepts an integer index, this method does
+        Equivalent to ``variables[name]``, except that only lookup by name is
+        supported: `variables` also accepts an integer index, this method does
         not.
 
         Parameters
@@ -589,7 +589,7 @@ class InputFileTemplate:
         Raises
         ------
         KeyError
-            If `name` is not a key of `.variables`.
+            If `name` is not a key of `variables`.
         """
         if name not in self.variables.keys():
             raise KeyError(f"{name} is not a valid variable.")
@@ -609,8 +609,8 @@ class InputFileTemplate:
             New comment of the variable. If None, the comment is left unchanged.
         unit : str, default=None
             New unit of the variable. If None, the unit is left unchanged. The
-            unit is not part of the input file text: it only feeds `.unit` and
-            `.label` of the variable.
+            unit is not part of the input file text: it only feeds the `unit` and
+            `label` attributes of the variable.
 
         Returns
         -------
@@ -620,7 +620,7 @@ class InputFileTemplate:
         Raises
         ------
         KeyError
-            If `name` is not a key of `.variables`.
+            If `name` is not a key of `variables`.
         """
 
         var = self.get_variable(name)
@@ -682,10 +682,10 @@ class InputFile(InputFileTemplate):
     ``InputFile(text=...)`` works; ``InputFile()`` followed by ``.text = ...`` does not.
     The latter cannot work: ``InputFile()`` has no text to detect from, so it returns a
     product-agnostic `.InputFileTemplate` whose `load_variables()` is a no-op, and assigning
-    `.text` afterwards cannot re-class the object it is called on. The text round-trips, but
-    `.variables` stays empty and `.product` stays ``'not valid'``, silently. Dispatch
+    `text` afterwards cannot re-class the object it is called on. The text round-trips, but
+    `variables` stays empty and `product` stays ``'not valid'``, silently. Dispatch
     happens in `__new__` or not at all, so the contents must be supplied at construction.
-    (Assigning `.text` to a file loaded *from a path* is fine — that object is already a
+    (Assigning `text` to a file loaded *from a path* is fine — that object is already a
     product class.)
 
     Two limitations follow from dispatching in `__new__`, both deliberate:
@@ -1075,11 +1075,11 @@ class Sweep:
     product : str
         Detected nextnano product of the input file. Read-only.
     config : NNConfig
-        The configuration `.input_file` runs on. Settable, but the assignment
-        reaches only `.input_file`: the files `save()` generates take their
+        The configuration `input_file` runs on. Settable, but the assignment
+        reaches only `input_file`: the files `save()` generates take their
         configuration from the `configpath` given at construction.
     configpath : str or pathlib.Path
-        Path of the configuration file behind `.config`. Read-only.
+        Path of the configuration file behind `config`. Read-only.
 
 
     Raises
@@ -1156,7 +1156,7 @@ class Sweep:
 
         The files are written next to the input file being swept, with the swept
         values appended to the name (`example__BIAS_1.5_.in`), and are collected in
-        `.input_files` and `.sweep_infodict`.
+        `input_files` and `sweep_infodict`.
 
         Parameters
         ----------
@@ -1273,9 +1273,9 @@ class Sweep:
         for compatibility and will be deprecated.
 
         Each input file is run in turn, or `parallel_limit` at a time. The output is
-        collected under `.sweep_output_directory` together with `sweep_info.txt` and
+        collected under `sweep_output_directory` together with `sweep_info.txt` and
         `sweep_infodict.json`, and every simulation's variable combination is
-        recorded in `.sweep_output_infodict`.
+        recorded in `sweep_output_infodict`.
 
         Parameters
         ----------
@@ -1320,7 +1320,7 @@ class Sweep:
             Forwarded to `InputFile.execute()` for every simulation.
             `outputdirectory` is the exception: it is taken as the parent of the
             sweep directory rather than passed on, and defaults to the
-            `outputdirectory` of `.config`.
+            `outputdirectory` of `config`.
 
         Raises
         ------
