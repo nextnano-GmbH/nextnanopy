@@ -40,44 +40,57 @@ class InputFileTemplate:
 
     Parameters
     ----------
-    fullpath : str
-        path to the file.
-        If it is not None, it will load the file (default: None)
-    configpath : str
-        path to the config file.
-        If it is None, it takes a copy of the process-wide configuration
-        (nextnanopy.config) instead of reading a file; see Notes (default: None)
+    fullpath : str or pathlib.Path, default=None
+        Path to the file. If given, the file is loaded, unless `text` is given as
+        well: then `fullpath` only names the file and nothing is read from disk.
+    configpath : str or pathlib.Path, default=None
+        Path to the config file. If omitted, a copy of the process-wide
+        configuration (`nextnanopy.config`) is taken instead of reading a file;
+        see Notes.
+    parse : bool, default=False
+        Experimental feature to parse the input file into a structured object.
+        Please refrain from using it.
+    text : str, default=None
+        Contents of the input file. If given, the file content is read from this
+        string instead of from disk at `fullpath`.
 
     Attributes
     ----------
-    fullpath : str
-        path to the file (default: None)
-    configpath : str
-        path to the config file (default: your home path)
-    variables : DictList
-        input variables defined in the file (default: DictList())
-    raw_lines : list
-        list of str of each line in the file
+    fullpath : str or pathlib.Path
+        Path to the file.
+    configpath : str or pathlib.Path
+        Path of the configuration file behind `.config`. Read-only; assign
+        `.config` to point this file at a different configuration.
+    variables : DictList of InputVariable
+        Input variables defined in the file, keyed by name.
+    raw_lines : list of str
+        Each line of the file as it was loaded.
+    raw_text : str
+        The `.raw_lines` as one string, without the current input variable values
+        applied. Read-only.
     text : str
-        raw text of the file (settable)
-    lines : list
-        raw_lines updated with the current input variable parameters
+        Text of the file with the current variable values applied. Assigning
+        replaces `.raw_lines` and reloads `.variables`, but does not re-detect
+        `.product`.
+    lines : list of str
+        The `.raw_lines` updated with the current input variable parameters.
     filename : str
-        name with the file extension (settable)
-    filename_only
-        name without the file extension (settable)
+        File name with the extension.
+        Assigning changes `.fullpath` to the same folder with the new name.
+    filename_only : str
+        File name without the extension.
+        Assigning changes `.fullpath` to the new name, keeping the folder and the extension.
     folder_input : str
-        folder of the fullpath (settable)
-    folder_output : str
-        folder where the simulated data is stored after execution
+        Folder containing the input file.
+        Assigning changes `.fullpath` to the new folder, keeping the file name.
     product : str
-        detected nextnano product when the file is loaded (default: 'not valid')
-    config : nextnano.NNConfig
-        the configuration this file runs on, bound at construction (see Notes).
-        .default_command_args reads through it, so it is what execute() turns into
-        command line arguments
+        Detected nextnano product when the file is loaded.
+        Defaults to 'not valid' if the product is not recognised.
+    config : NNConfig
+        The configuration this file runs on, bound at construction (see Notes).
     execute_info : dict
-        information after executing the file
+        Information about the last execution. Empty until `.execute()` has run.
+
 
     Methods
     -------
@@ -206,6 +219,20 @@ class InputFileTemplate:
 
     @property
     def folder_output(self):
+        """
+        Folder where the simulated data is stored. Read-only.
+
+        Returns
+        -------
+        pathlib.Path
+            Output directory of the last execution, as chosen by `execute()`
+            from `overwrite` and `create_subdirectory`.
+
+        Raises
+        ------
+        KeyError
+            If the input file has not been executed yet.
+        """
         key = "outputdirectory"
         if key in self.execute_info.keys():
             return self.execute_info[key]
@@ -218,8 +245,8 @@ class InputFileTemplate:
 
         Parameters
         ----------
-        nums : bool, optional
-            If it is True, it will show the number of each line. (default is True)
+        nums : bool, default=True
+            If True, prefix each line with its index, starting at 0.
         """
         for i, line in enumerate(self.lines):
             if nums:
@@ -229,23 +256,31 @@ class InputFileTemplate:
 
     def load(self, fullpath, text=None):
         """
+        Load the input file.
+
         The steps are the following:
 
-        1. clear the current information
-        2. load the raw text (update .fullpath and .raw_lines)
-        3. find the nextnano product (update .product)
-        4. validate the input file
-        5. load the input variables (update .variables)
-        6. load content (when applicable)
+        1. Clear `.raw_lines`, `.variables` and `.fullpath`.
+        2. Load the raw text (updates `.fullpath` and `.raw_lines`).
+        3. Find the nextnano product (updates `.product`).
+        4. Validate the input file.
+        5. Load the input variables (updates `.variables`).
+        6. Load the content, when applicable.
 
         Parameters
         ----------
-        fullpath : str
-            path to the file to be loaded
-        text : str, optional
-            contents of fullpath, if the caller has already read them. Saves
-            re-reading the file from disk. If None (default), it is read here.
+        fullpath : str or pathlib.Path
+            Path to the file to be loaded.
+        text : str, default=None
+            Contents of `fullpath`, if the caller has already read them. Saves
+            re-reading the file from disk. If omitted, the file is read here.
+
+        Raises
+        ------
+        FileNotFoundError
+            If `fullpath` does not exist and `text` is not given.
         """
+
         self.clear()
         self.fullpath = fullpath
         self.load_raw(text=text)
@@ -266,25 +301,44 @@ class InputFileTemplate:
         """
         Save the current information into a file.
 
+        `.fullpath` is updated to the path that was written.
+
         Parameters
         ----------
-        fullpath : str, optional
-            path including the file name where it will be saved (default is None)
-            If None, it will use the current .fullpath
-        overwrite : bool, optional
-            If it is False, it will find an unused name by adding an extra index like _1
-            (default is False)
-        automkdir : bool, optional
-            If it is True, it will create the folder if it does not exist.
-            (default is False)
-        temp : bool, optional
-            If it is True, it will save the file in a temporary location.
-            (default is False)
-        content : bool, optional
-            If it is True, it will save the parsed .content instead of .text.
-            Comments are not preserved. It requires the file to be loaded with parse=True.
-            (default is False)
+        fullpath : str or pathlib.Path, default=None
+            Path including the file name where it will be saved. If None, the
+            current `.fullpath` is used.
+        overwrite : bool, default=False
+            If False, an index is appended to the file name when it is already
+            taken (`example.nnp`, then `example_0.nnp`, `example_1.nnp`, ...), so an
+            existing file is never overwritten. If True, the file is written even
+            if it exists and no index is appended.
+        automkdir : bool, default=True
+            If True, create the parent folder if it does not exist.
+        temp : bool, default=False
+            If True, save into a temporary folder that is removed when the process
+            exits, keeping the current `.filename`. Ignored with a warning when
+            `fullpath` is given.
+        content : bool, default=False
+            Experimental feature, refrain from using it.
+            If True, save the parsed `.content` instead of `.text`. Comments are
+            not preserved. It requires the file to be loaded with `parse=True`.
+
+        Returns
+        -------
+        str
+            Path of the file that was written. Not necessarily `fullpath`: with
+            `overwrite=False` an index may have been appended.
+
+        Raises
+        ------
+        ValueError
+            If neither `fullpath` nor `.fullpath` is set, or if `content` is True
+            and the file was not loaded with `parse=True`.
+        FileNotFoundError
+            If `automkdir` is False and the parent folder does not exist.
         """
+
         if temp and fullpath is not None:
             warnings.warn("Fullpath is specified, temp flag is ignored", stacklevel=2)
         if fullpath is None:
@@ -321,70 +375,90 @@ class InputFileTemplate:
         **kwargs,
     ):
         """
-        Execute the input file located at .fullpath
+        Execute the input file located at `.fullpath`.
 
-        Individual kwargs can be passed like 'license' or 'database'
-        If no kwargs is specified, it will use the default values in .config
+        Individual kwargs can be passed like `license` or `database`; anything not
+        given comes from `.config`.
 
         Parameters
         ----------
-        show_log : bool, optional
-            if False, suppress the simulation log
-            (default is True)
-        convergenceCheck : bool, optional
-            if True, check convergence of the simulation
-            (default is False)
-        convergence_check_mode : str, optional
-            works only for convergenceCheck = True
-            options:
+        show_log : bool, default=True
+            If False, do not print the simulation log to the console. The log file
+            is written either way.
+        convergenceCheck : bool, default=False
+            If True, check the log for convergence once the simulation has finished.
+            Ignored when the file is executed in parallel, as a sweep or an
+            execution queue does.
+        convergence_check_mode : {'pause', 'terminate', 'continue'}
+            What to do when the simulation did not converge. Only used when
+            `convergenceCheck` is True.
 
-            - 'pause': asks user how to proceed if simulation did not converge (default);
-              if no interactive terminal is attached (e.g. CI, cluster jobs),
-              behaves like 'terminate' instead of blocking on input
-            - 'terminate': terminate the script if the simulation did not converge
-            - 'continue': notify a user but continues execution of script
-        overwrite : bool, optional
-            if False, the output directory is created under an unused name: an index
-            is appended ('example_0', 'example_1', ...) when the name is already
+            - 'pause': ask the user how to proceed. If no interactive terminal is
+              attached (e.g. CI, cluster jobs), behaves like 'terminate' instead of
+              blocking on input.
+            - 'terminate': terminate the script.
+            - 'continue': notify the user but continue the script. This is also the
+              only mode that tolerates a missing log file.
+        overwrite : bool, default=False
+            If False, the output directory is created under an unused name: an index
+            is appended (`example_0`, `example_1`, ...) when the name is already
             taken, so a run never writes into an earlier run's output. If True, an
             existing directory is used as it is - which means writing next to
             whatever the earlier run left there; nothing is deleted.
-            Has no effect when create_subdirectory is False.
-            (default is False)
-        create_subdirectory : bool, optional
-            if True, the simulation writes into
-            '<outputdirectory>/<input file name>/'. If False, it writes into the
-            outputdirectory itself.
-            (default is True)
-        **kwargs
-            the nextnano product's own command line arguments, passed on as they are.
-            Anything not given here comes from .config. kwargs may contain:
+            Has no effect when `create_subdirectory` is False.
+        create_subdirectory : bool, default=True
+            If True, the simulation writes into
+            `<outputdirectory>/<input file name>/`. If False, it writes into the
+            `outputdirectory` itself.
+        **kwargs : dict
+            The nextnano product's own command line arguments, passed on as they
+            are. Anything not given here comes from `.config`. `kwargs` may contain:
 
             exe : str, optional
-                path to executable
+                Path to the executable.
             license : str, optional
-                path to license file
+                Path to the license file.
             database : str, optional
-                path to database file
+                Path to the database file.
             outputdirectory : str, optional
-                path where to save the simulated data
+                Path where to save the simulated data.
 
-            and other parameters depending on the nextnano product.
-            For example, 'threads' is accepted by nextnano++.
-            See the documentation of the command line arguments of each nextnano product
-            on the online Manual (https://www.nextnano.de/manual/).
+            and other parameters depending on the nextnano product. For example,
+            'threads' is accepted by nextnano++. See the documentation of the
+            command line arguments of each nextnano product on the online Manual
+            (https://www.nextnano.com/docu/).
+
+        Returns
+        -------
+        dict
+            Information about the started simulation, also stored in
+            `.execute_info`. Keys: 'process', 'outputdirectory', 'filename',
+            'logfile', 'cmd', 'wdir', 'queue', 'tout', 'terr'.
+
+        Raises
+        ------
+        ValueError
+            If `.fullpath` is empty or is not an existing file, or if
+            `convergence_check_mode` is not one of the values listed above.
+        FileNotFoundError
+            If the executable path in `.config` is empty or invalid.
+        RuntimeError
+            If `convergenceCheck` is True and the simulation was terminated or did
+            not converge, unless `convergence_check_mode` is 'continue'.
+        NotImplementedError
+            If `convergenceCheck` is True and the product is nextnano.MSB.
 
         Notes
         -----
         The simulation is launched through the system shell, so
-        execute_info['process'] is the shell process, not the simulator
-        itself. On Windows, calling .kill()/.terminate() on it stops only
+        `execute_info['process']` is the shell process, not the simulator
+        itself. On Windows, calling `.kill()`/`.terminate()` on it stops only
         the shell wrapper; the running simulation is NOT stopped.
 
-        Where the output goes is decided by overwrite/create_subdirectory, which are
-        parameters rather than members of ``**kwargs``: they steer nextnanopy, not
-        the simulator, so they are also not config options. .folder_output holds the
-        directory that was chosen once the run has started.
+        Where the output goes is decided by `overwrite`/`create_subdirectory`, which
+        are parameters rather than members of ``**kwargs``: they steer nextnanopy,
+        not the simulator, so they are also not config options. `.folder_output`
+        holds the directory that was chosen once the run has started.
         """
 
         cmd_kwargs = dict(self.default_command_args)
@@ -513,17 +587,26 @@ class InputFileTemplate:
 
     def get_variable(self, name):
         """
-        Equivalent to self.variables[name]
+        Return the input variable called `name`.
+
+        Equivalent to `.variables[name]`, except that only lookup by name is
+        supported: `.variables` also accepts an integer index, this method does
+        not.
 
         Parameters
         ----------
         name : str
-            key for self.variables
+            Name of the input variable.
+
+        Returns
+        -------
+        InputVariable
+            The input variable stored under `name`.
 
         Raises
         ------
         KeyError
-            If name is not a key of self.variables
+            If `name` is not a key of `.variables`.
         """
         if name not in self.variables.keys():
             raise KeyError(f"{name} is not a valid variable.")
@@ -531,21 +614,30 @@ class InputFileTemplate:
 
     def set_variable(self, name, value=None, comment=None, unit=None):
         """
-        Change the value and/or the comment of self.variable[name]
+        Change the value, the comment and/or the unit of an input variable.
 
         Parameters
         ----------
         name : str
-            key for self.variables
-        value : not defined, optional
-            Equivalent to self.variables[name].value = value (default is None)
-            If it is None, it won't change it
-        comment : not defined, optional
-            Equivalent to self.variables[name].comment = comment (default is None)
-            If it is None, it won't change it
-        unit : not defined, optional
-            Equivalent to self.variables[name].unit = unit (default is None)
-            If it is None, it won't change it
+            Name of the input variable.
+        value : int, float or str, default=None
+            New value of the variable. If None, the value is left unchanged.
+        comment : str, default=None
+            New comment of the variable. If None, the comment is left unchanged.
+        unit : str, default=None
+            New unit of the variable. If None, the unit is left unchanged. The
+            unit is not part of the input file text: it only feeds `.unit` and
+            `.label` of the variable.
+
+        Returns
+        -------
+        InputVariable
+            The input variable that was changed.
+
+        Raises
+        ------
+        KeyError
+            If `name` is not a key of `.variables`.
         """
 
         var = self.get_variable(name)
