@@ -672,9 +672,6 @@ class InputFile(InputFileTemplate):
     ``path``). With neither, there is nothing to detect and nothing to load, so an empty
     ``InputFileTemplate`` comes back.
 
-    Parameters are ``InputFileTemplate``'s; see it for what they mean and for the API of the
-    object you get back.
-
     **Building from a string: use InputFile(text=...), not InputFile() + .text = ....**
     The latter cannot work: ``InputFile()`` has no text to detect from, so it returns a
     product-agnostic ``InputFileTemplate`` whose ``load_variables()`` is a no-op, and assigning
@@ -693,6 +690,10 @@ class InputFile(InputFileTemplate):
       and ignores ``cls``, so a subclass would be silently discarded; it raises ``TypeError``
       instead. To extend one product, subclass that product's class; to extend all of them,
       subclass ``InputFileTemplate``.
+
+    See Also
+    --------
+    InputFileTemplate : Parameters, attributes and methods of the object returned.
     """
 
     # Takes exactly InputFileTemplate.__init__'s parameters, and must keep doing so:
