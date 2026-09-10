@@ -91,6 +91,10 @@ class InputFileTemplate:
     execute_info : dict
         Information about the last execution. Empty until `execute()` has run.
 
+    See Also
+    --------
+    InputFile : For the documentation of the methods, see this class.
+
     Notes
     -----
     The configuration is bound at construction and never re-read afterwards. With no
