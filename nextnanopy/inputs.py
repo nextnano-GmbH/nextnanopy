@@ -91,23 +91,6 @@ class InputFileTemplate:
     execute_info : dict
         Information about the last execution. Empty until `.execute()` has run.
 
-
-    Methods
-    -------
-    preview(nums=True)
-        print the text of the file.
-    load(fullpath)
-        load an input file
-    save(fullpath=None, overwrite=False, automkdir=True)
-        save the current information into a file.
-    ``execute(**kwargs)``
-        execute the input file located at .fullpath
-    get_variable(name)
-        equivalent to self.variables[name]
-    set_variable(name, value=None, comment=None)
-        change the value and/or the comment of self.variable[name]
-        If value or comment is None, it won't change that parameter
-
     Notes
     -----
     The configuration is bound at construction and never re-read afterwards. With no
