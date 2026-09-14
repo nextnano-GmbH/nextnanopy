@@ -33,38 +33,39 @@ def displayname(data):
 
 
 class DataFolder:
-    """
-    This class stores information about output directory.
+    """Helper for the navigation in the output folder of the nextnano simulations.
 
-    The stored data contains files (.files) and folders (.folders)
-    Navigation between folders could be done in 3 ways:
+    Lists the files the directory holds and a `.DataFolder` for each subfolder, built
+    recursively when the object is made -- so it is a snapshot of the tree as it stood
+    then.
 
-    1. DataFolder.folders['folder_name']
-    2. DataFolder.go_to('subfolder1', 'subfolder2', 'subfolder3')
-    3. DataFolder.subfolder1.subfolder2.subfolder3
+    A subfolder can be reached three ways::
 
-    For each method see details below.
+        folder.folders['results']
+        folder.go_to('results', 'bias_0')
+        folder.results.bias_0
 
-    The initialization of the class will execute load and create_navigation methods.
+    The last needs a name that is a usable Python identifier and that `DataFolder` is
+    not already using: a clashing name such as ``files`` warns and gets no attribute,
+    and a name holding a space or a dot gets one that no dotted expression can reach.
+    `go_to` works whatever the name.
 
     Parameters
     ----------
-    fullpath : str
-        path to a file
+    fullpath : str or pathlib.Path
+        Path to the directory.
 
     Attributes
     ----------
-    fullpath : str
-        path to a file
+    fullpath : str or pathlib.Path
+        Path to the directory.
     folders : DictList
-        subfolders of the DataFolder,
-
-        keys : str
-            names of subfolders
-        values : DataFolder
-            DataFolder objects of subfolders
-    files : list
-        paths to files in folder
+        A `DataFolder` for each direct subfolder, keyed by subfolder name.
+    files : list of str
+        Path of each file lying directly in the directory, in name order. Files held
+        by the subfolders are not among them.
+    name : str
+        Name of the directory itself, without the path leading to it. Read-only.
 
     Methods
     -------
@@ -127,6 +128,41 @@ class DataFolder:
                 setattr(self, key, folder)
 
     def find(self, template, deep=False):
+        """Return the files whose name contains `template`.
+
+        Parameters
+        ----------
+        template : str
+            Substring to look for. Matched against the file name alone, not the
+            folders leading to it, and taken literally -- case matters and there is
+            no globbing, so ``*.dat`` finds nothing while ``.dat`` finds every one.
+        deep : bool, default=False
+            Whether to search the subfolders as well, at every depth.
+
+        Returns
+        -------
+        list of str
+            Path of every file that matched, this directory's first and then each
+            subfolder's. Empty when nothing matched.
+
+        Examples
+        --------
+        >>> folder = DataFolder('output')
+        >>> folder.find('bias')
+        ['output/a_bias.dat', 'output/b_bias.dat']
+
+        Reaching into the subfolders as well:
+
+        >>> folder.find('bias', deep=True)
+        ['output/a_bias.dat', 'output/b_bias.dat', 'output/sweep/z_bias.dat']
+
+        The template is a plain substring, so a glob matches nothing and case matters:
+
+        >>> folder.find('*.dat')
+        []
+        >>> folder.find('BIAS')
+        []
+        """
         list_of_files = [file for file in self.files if template in os.path.basename(file)]
         if not deep:
             return list_of_files
@@ -138,6 +174,44 @@ class DataFolder:
             return list_of_files
 
     def find_multiple(self, templates, deep=False):
+        """Return the files whose name contains every one of `templates`.
+
+        Parameters
+        ----------
+        templates : list of str
+            Substrings that must all appear in the file name, in any order. Each is
+            matched the way `find` matches its own: against the name alone, taken
+            literally, case included. An empty list matches every file.
+        deep : bool, default=False
+            Whether to search the subfolders as well, at every depth.
+
+        Returns
+        -------
+        list of str
+            Path of every file that matched, this directory's first and then each
+            subfolder's. Empty when nothing matched.
+
+        See Also
+        --------
+        find : Search for a single substring.
+
+        Notes
+        -----
+        Pass a list, never a bare string. A string is iterated character by character,
+        so ``find_multiple('bias')`` asks for the letters ``b``, ``i``, ``a`` and ``s``
+        in any order rather than for the word.
+
+        Examples
+        --------
+        >>> folder = DataFolder('output')
+        >>> folder.find_multiple(['bias', '.dat'], deep=True)
+        ['output/a_bias.dat', 'output/b_bias.dat', 'output/sweep/z_bias.dat']
+
+        Every template has to appear, so adding one narrows the result:
+
+        >>> folder.find_multiple(['bias', 'a_'])
+        ['output/a_bias.dat']
+        """
         list_of_files = []
 
         for file in self.files:
@@ -164,6 +238,43 @@ class DataFolder:
             return matched_files[0]
 
     def go_to(self, *args):
+        """Follow a path down from this directory and return what is there.
+
+        Parameters
+        ----------
+        *args
+            Names to descend through, one per level, joined onto `fullpath`. With
+            none, the directory itself is returned.
+
+        Returns
+        -------
+        DataFolder or str
+            A new `DataFolder` when the path names a directory, the path itself when
+            it names a file.
+
+        Raises
+        ------
+        ValueError
+            If the path names neither a file nor a directory.
+
+        Notes
+        -----
+        The directory is scanned again, so the object handed back is a new one and not
+        the `.DataFolder` already sitting in `folders`. It therefore sees files written
+        since, at the cost of walking that part of the tree once more.
+
+        Examples
+        --------
+        >>> folder = DataFolder('output')
+        >>> sweep = folder.go_to('sweep')
+        >>> sweep.name
+        'sweep'
+
+        A file comes back as its path, ready to hand to `.DataFile`:
+
+        >>> folder.go_to('sweep', 'z_bias.dat')
+        'output/sweep/z_bias.dat'
+        """
         path = os.path.join(self.fullpath, *args)
         if os.path.isdir(path):
             data = DataFolder(path)
@@ -205,6 +316,15 @@ class DataFolder:
         return result
 
     def show_tree(self, with_files=True, deep=True):
+        """Print the folder tree.
+
+        Parameters
+        ----------
+        with_files : bool, default=True
+            Whether to list the files as well as the folders.
+        deep : bool, default=True
+            Whether to descend past the direct subfolders.
+        """
         tree_list = self.make_tree(with_files=with_files, deep=deep)
         print("\n".join(tree_list))
 
@@ -215,6 +335,20 @@ class DataFolder:
         return folder_name
 
     def read_sweep_infodict(self):
+        """Read the sweep information stored in this directory.
+
+        Returns
+        -------
+        dict of {str : dict}
+            The swept variable combination of each simulation, keyed by its output
+            folder, as `.Sweep.execute` wrote it to ``sweep_infodict.json``.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the directory holds no ``sweep_infodict.json``, so it is not the output
+            of a sweep.
+        """
         infodict_path = os.path.join(self.fullpath, "sweep_infodict.json")
 
         if not os.path.isfile(infodict_path):
