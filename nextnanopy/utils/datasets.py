@@ -10,38 +10,41 @@ def default_label_fmt(name, unit):
 
 
 class Data:
-    """
-    This class stores any kind of information from nextnano files (input files, data files).
+    """Base class for the datasets nextnanopy reads out of nextnano files: `.Variable`
+    and `.Coord` from data files, `.InputVariable` from input files.
 
-    This is a template class for datasets like Variables, Coords, InputVariables, etc.
+    Named value with a unit, a label and free-form metadata.
 
     Parameters
     ----------
     name : str
-        name of the dataset
+        Name of the dataset.
     value : not defined
-        stored value
-    unit : str, optional
-        unit of the value (default is None)
-    metadata : dict, optional
-        extra information (default is {})
-    label_fmt : method, optional
-        formatting label with label_fmt(name, unit) (default is None)
-        If it is None, label_fmt = default_label_fmt, i.e. f'{name} ({unit})'
+        Stored value.
+    unit : str, default=None
+        Unit of the value.
+    metadata : dict, default=None
+        Extra information.
+    label_fmt : callable, default=None
+        Called as ``label_fmt(name, unit)`` to build `label`.
+        If not defined, the two are joined as ``'{name} ({unit})'``.
 
     Attributes
     ----------
     name : str
-        name of the dataset
+        Name of the dataset.
     value : not defined
-        stored value
+        Stored value.
     unit : str
-        unit of the value (default is None)
+        Unit of the value.
     metadata : dict
-        extra information (default is {})
-    label_fmt : method
-        formatting label with label_fmt(name, unit) (default is None)
-        If it is None, label_fmt = default_label_fmt, i.e. f'{name} ({unit})'
+        Extra information. Empty unless the loader filled it in.
+    label : str
+        Name and unit rendered by `label_fmt`, ready to use as an axis label.
+        Read-only.
+    label_fmt : callable
+        Called as ``label_fmt(name, unit)`` to build `label`. If omitted,
+        the two are joined as ``'{name} ({unit})'``.
     """
 
     params = ["name", "value", "unit", "metadata"]
@@ -81,41 +84,40 @@ class Data:
 
 
 class Variable(Data):
-    """
-    This class stores independent variables from data files.
+    """Dependent variable read from a nextnano data file.
+
+    Holds the quantity itself; the axes it is sampled on are `.Coord` objects.
 
     Parameters
     ----------
     name : str
-        name of the dataset
-    value : not defined
-        stored value
-    unit : str, optional
-        unit of the value (default is None)
-    metadata : dict, optional
-        extra information (default is {})
-    label_fmt : method, optional
-        formatting label with label_fmt(name, unit) (default is None)
-        If it is None, label_fmt = default_label_fmt, i.e. f'{name} ({unit})'
+        Name of the dataset.
+    value : array_like
+        Stored value.
+    unit : str, default=None
+        Unit of the value.
+    metadata : dict, default=None
+        Extra information.
+    label_fmt : callable, default=None
+        Called as ``label_fmt(name, unit)`` to build `label`.
+        If not defined, the two are joined as ``'{name} ({unit})'``.
 
     Attributes
     ----------
     name : str
-        name of the dataset
-    value : not defined
-        stored value
+        Name of the dataset.
+    value : numpy.ndarray
+        Stored value.
     unit : str
-        unit of the value (default is None)
+        Unit of the value.
     metadata : dict
-        extra information (default is {})
-    label_fmt : method
-        formatting label with label_fmt(name, unit) (default is None)
-        If it is None, label_fmt = default_label_fmt, i.e. f'{name} ({unit})'
-
-    Methods
-    -------
-    get_value()
-        return a copy of the value
+        Extra information. Empty unless the loader filled it in.
+    label : str
+        Name and unit rendered by `label_fmt`, ready to use as an axis label.
+        Read-only.
+    label_fmt : callable
+        Called as ``label_fmt(name, unit)`` to build `label`. If omitted,
+        the two are joined as ``'{name} ({unit})'``.
     """
 
     params = ["name", "value", "unit", "metadata"]
@@ -126,6 +128,7 @@ class Variable(Data):
         super().__init__(name, value, unit, metadata, **kwargs)
 
     def get_value(self):
+        "Return a copy of the value."
         value = deepcopy(self.value)
         return value
 
@@ -134,53 +137,53 @@ class Variable(Data):
 
 
 class Coord(Data):
-    """
-    This class stores the coordinates from data files.
+    """Independent variable read from a nextnano data file.
+
+    Holds one axis of the dataset; the quantities sampled on it are `.Variable` objects.
 
     Parameters
     ----------
     name : str
-        name of the dataset
-    value : not defined
-        stored value
+        Name of the dataset.
+    value : array_like
+        Stored value.
     dim : int
-        dim for the Variable.value
-        For example, for a dataset of (100, 2) and a coordinate x of 100 pts, dim = 0
-    unit : str, optional
-        unit of the value (default is None)
-    offset : not defined, optional
-        offset to be added to value (default is 0)
-    metadata : dict, optional
-        extra information (default is {})
-    label_fmt : method, optional
-        formatting label with label_fmt(name, unit) (default is None)
-        If it is None, label_fmt = default_label_fmt, i.e. f'{name} ({unit})'
+        Index of the axis this coordinate spans in the shape of the data it belongs to.
+        For a dataset of shape ``(100, 2)``, a coordinate of 100 points has ``dim = 0``.
+    unit : str, default=None
+        Unit of the value.
+    offset : array_like, default=0
+        Shift added to `value` when the offset is requested.
+    metadata : dict, default=None
+        Extra information.
+    label_fmt : callable, default=None
+        Called as ``label_fmt(name, unit)`` to build `label`.
+        If not defined, the two are joined as ``'{name} ({unit})'``.
 
     Attributes
     ----------
     name : str
-        name of the dataset
-    value : not defined
-        stored value
+        Name of the dataset.
+    value : numpy.ndarray
+        Stored value.
     dim : int
-        dim for the Variable.value
-        For example, for a dataset of (100, 2) and a coordinate x of 100 pts, dim = 0
+        Index of the axis this coordinate spans in the shape of the data it belongs to.
+        For a dataset of shape ``(100, 2)``, a coordinate of 100 points has ``dim = 0``.
     unit : str
-        unit of the value (default is None)
-    offset : not defined
-        offset to be added to value (default is 0)
+        Unit of the value.
+    offset : numpy.ndarray
+        Shift added to `value` when the offset is requested.
     metadata : dict
-        extra information (default is {})
-    label_fmt : method
-        formatting label with label_fmt(name, unit) (default is None)
-        If it is None, label_fmt = default_label_fmt, i.e. f'{name} ({unit})'
-    valueo : not defined
-        value with offset
-
-    Methods
-    -------
-    get_value(use_offset=False)
-        return a copy of the value with or without the offset
+        Extra information. Empty unless the loader filled it in.
+    label : str
+        Name and unit rendered by `label_fmt`, ready to use as an axis label.
+        Read-only.
+    label_fmt : callable
+        Called as ``label_fmt(name, unit)`` to build `label`. If omitted,
+        the two are joined as ``'{name} ({unit})'``.
+    valueo : numpy.ndarray
+        `value` shifted by `offset`. Computed once at construction, so it does not
+        follow later changes to either.
     """
 
     params = ["name", "value", "unit", "offset", "dim", "metadata"]
@@ -194,6 +197,18 @@ class Coord(Data):
         self.valueo = self.get_value(use_offset=True)
 
     def get_value(self, use_offset=False):
+        """Return a copy of the value, with or without the offset.
+
+        Parameters
+        ----------
+        use_offset : bool, default=False
+            Whether to add `offset` to the returned copy.
+
+        Returns
+        -------
+        numpy.ndarray
+            A copy, so changing it does not change `value`.
+        """
         value = deepcopy(self.value)
         if use_offset:
             value += self.offset
@@ -206,50 +221,51 @@ class Coord(Data):
 
 
 class InputVariable(Data):
-    """
-    Template class for the input variables.
+    """Variable defined in a nextnano input file.
 
-    For each nextnano product, it will be specified
-    the variable character (e.g $ for nextnano++) and the comment character (e.g # for nextnano++).
+    Base class for the per-product variants, which set `var_char` and `com_char` to
+    the characters that product marks variables and comments with -- ``$`` and ``#``
+    for nextnano++.
 
     Parameters
     ----------
     name : str
-        name of the dataset
+        Name of the dataset.
     value : not defined
-        stored value
-    unit : str, optional
-        unit of the value (default is '')
-    comment : str, optional
-        (default is '')
-    metadata : dict, optional
-        extra information (default is {})
-    label_fmt : method, optional
-        formatting label with label_fmt(name, unit) (default is None)
-        If it is None, label_fmt = default_label_fmt, i.e. f'{name} ({unit})'
+        Stored value.
+    unit : str, default=''
+        Unit of the value.
+    comment : str, default=''
+        Comment written after the value on the same line of the input file.
+    metadata : dict, default=None
+        Extra information.
+    label_fmt : callable, default=None
+        Called as ``label_fmt(name, unit)`` to build `label`.
+        If not defined, the two are joined as ``'{name} ({unit})'``.
 
     Attributes
     ----------
     name : str
-        name of the dataset
-    value : not defined
-        stored value
+        Name of the dataset.
+    value : numpy.ndarray or object
+        Stored value. Converted with `numpy.array` at construction; assigning to it,
+        as `InputFile.set_variable` does, stores the object unchanged.
     unit : str
-        unit of the value (default is '')
+        Unit of the value.
     comment : str
-        (default is '')
+        Comment written after the value on the same line of the input file.
     metadata : dict
-        extra information (default is {})
-    label_fmt : method
-        formatting label with label_fmt(name, unit) (default is None)
-        If it is None, label_fmt = default_label_fmt, i.e. f'{name} ({unit})'
+        Extra information. Carries ``line_idx``, the line the variable was read from,
+        for every variable parsed out of a file.
+    label : str
+        Name and unit rendered by `label_fmt`, ready to use as an axis label.
+        Read-only.
+    label_fmt : callable
+        Called as ``label_fmt(name, unit)`` to build `label`. If omitted,
+        the two are joined as ``'{name} ({unit})'``.
     text : str
-        return the raw text for the input file
-
-    Methods
-    -------
-    get_value(use)
-        return a copy of the value
+        The variable as one line of input-file syntax, ``$name = value # comment``,
+        with the characters of the product. Read-only.
     """
 
     params = ["name", "value", "unit", "comment", "metadata"]
@@ -263,6 +279,7 @@ class InputVariable(Data):
         self.comment = comment
 
     def get_value(self):
+        """Return a copy of the value."""
         value = deepcopy(self.value)
         return value
 
