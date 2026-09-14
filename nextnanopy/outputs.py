@@ -722,7 +722,6 @@ class DataFile(Output):
             write_avsascii_one_file(
                 coordinates=self.coords, variables=self.variables, filename=filepath
             )
-        self.filepath = filepath
 
 
 #: Kept for the imports written against the old two-class split. `DataFileTemplate`
