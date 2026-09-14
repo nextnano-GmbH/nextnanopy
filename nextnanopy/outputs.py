@@ -229,6 +229,50 @@ class DataFolder:
 
 
 class Output:
+    """Base class for the objects that hold the contents of one nextnano output file.
+
+    Carries the coordinates and the variables read from the file, together with the
+    pieces of its path. `.DataFile` is the subclass a user works with; the per-format
+    loaders behind it derive from this class as well.
+
+    Parameters
+    ----------
+    fullpath : str
+        Path to the file.
+    **loader_kwargs
+        Accepted so that the loader subclasses share one signature. Ignored here.
+
+    Attributes
+    ----------
+    fullpath : str
+        Path to the file. Settable, and the path properties below follow it.
+    coords : DictList
+        `.Coord` objects, keyed by name.
+    variables : DictList
+        `.Variable` objects, keyed by name.
+    metadata : dict
+        Extra information recorded by the loader.
+    data : DictList
+        `coords` and `variables` in one mapping. Built afresh on every access, so
+        assigning into it changes nothing. Read-only.
+    folder : str
+        Folder holding the file. Read-only.
+    filename : str
+        File name with the extension. Read-only.
+    filename_only : str
+        File name without the extension. Read-only.
+    extension : str
+        File extension, leading dot included. Read-only.
+
+    Notes
+    -----
+    Subscripting searches `coords` first and then `variables`, so ``output['x']``
+    reaches either without the caller naming which one it is. Assignment and ``del``
+    go the same way, but only for a key that already exists -- adding a dataset means
+    assigning to `coords` or `variables` directly. Iterating yields the `.Coord` and
+    `.Variable` objects themselves, not their names.
+    """
+
     def __init__(self, fullpath, **loader_kwargs):
         self.fullpath = fullpath
         self.metadata = {}
@@ -262,9 +306,43 @@ class Output:
         pass
 
     def get_coord(self, key):
+        """Return the coordinate stored under `key`.
+
+        Parameters
+        ----------
+        key : str or int
+            Name of the coordinate, or its position in `coords`.
+
+        Returns
+        -------
+        Coord
+            The stored object, not a copy.
+
+        Raises
+        ------
+        KeyError
+            If `key` is neither a name nor a valid position in `coords`.
+        """
         return self.coords[key]
 
     def get_variable(self, key):
+        """Return the variable stored under `key`.
+
+        Parameters
+        ----------
+        key : str or int
+            Name of the variable, or its position in `variables`.
+
+        Returns
+        -------
+        Variable
+            The stored object, not a copy.
+
+        Raises
+        ------
+        KeyError
+            If `key` is neither a name nor a valid position in `variables`.
+        """
         return self.variables[key]
 
     def __getitem__(self, item):
