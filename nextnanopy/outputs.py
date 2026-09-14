@@ -66,32 +66,6 @@ class DataFolder:
         by the subfolders are not among them.
     name : str
         Name of the directory itself, without the path leading to it. Read-only.
-
-    Methods
-    -------
-    load()
-        load a DataFolder
-    create_navigation
-        creates attributes for navigation like DataFolder.subfolder1.subfolder2.subfolder3
-        if name of subfolder corresponds to existed attribute of DataFolder class, attribute will not be created!
-        if name of subfolder contains spaces, dots or special characters, attribute will be created, but navigation
-        to this subfolder will not work  - attribute error.
-    find(template, deep = False)
-        searches for a files which names contain template.
-        template should be string.
-        if deep = True, searches in subfolders as well.
-
-        return: list of files
-    ``go_to(*args)``
-        goes to the location
-        DataFolder_path\\arg1\\arg2\\arg3...
-
-        if location is a file:
-            return filepath
-        if location is a folder:
-            return DataFolder(location)
-    filenames()
-        return filenames of files in folder
     """
 
     def __init__(self, fullpath):
