@@ -534,6 +534,47 @@ class DataFile(Output):
         raise NotImplementedError("Exporters are not implemented yet")
 
     def plot(self, legend=False, y_axis_name="", subplots=False):
+        """Draw a quick preview of the data with matplotlib.
+
+        What is drawn follows the number of coordinates: with none the first variable
+        serves as the x axis, with one the variables are drawn against that
+        coordinate, and with two each variable becomes a colour mesh.
+
+        Parameters
+        ----------
+        legend : bool, default=False
+            Whether to draw a legend. Used only for the line plots, that is a file
+            with no coordinate or one; a colour mesh is named by its title instead.
+        y_axis_name : str, default=''
+            Prefix of the y-axis label, which is written as ``name[unit]``. Used only
+            for a file with no coordinate or one.
+        subplots : bool, default=False
+            Whether to stack the variables as axes of a single figure. Used only for a
+            file with two coordinates and more than one variable, where the
+            alternative is one figure per variable.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The figure drawn. With two coordinates, several variables and
+            ``subplots=False``, one figure is made per variable and only the last one
+            is returned.
+        matplotlib.axes.Axes or numpy.ndarray
+            The axes of that figure, an array of them when ``subplots=True``.
+
+        Raises
+        ------
+        NotImplementedError
+            If the file has more than two coordinates.
+        ImportError
+            If matplotlib is not installed. It is an optional dependency,
+            ``pip install nextnanopy[plot]``.
+
+        Notes
+        -----
+        Nothing appears until `matplotlib.pyplot.show` is called, unless the session
+        draws figures by itself as a notebook does.
+        """
         import matplotlib.pyplot as plt
 
         if len(self.coords) == 0:
@@ -550,6 +591,8 @@ class DataFile(Output):
                 for var in self.variables:
                     ax.plot(var.value, label=var.name)
             ax.set_ylabel(f"{y_axis_name}[{var.unit}]")
+            if legend:
+                ax.legend()
         elif len(self.coords) == 1:
             fig, ax = plt.subplots()
             x_coord = self.coords[0]
@@ -561,7 +604,7 @@ class DataFile(Output):
                 ax.plot(x_value, var.value, label=var.name)
             ax.set_ylabel(f"{y_axis_name}[{var.unit}]")
             if legend:
-                plt.legend()
+                ax.legend()
         elif len(self.coords) == 2:
             x = self.coords[0]
             y = self.coords[1]
