@@ -391,52 +391,44 @@ class Output:
         return iter(self.data.values())
 
 
-class DataFileTemplate(Output):
-    """
-    This class stores the data from any kind of nextnano data files with the same structure.
+class DataFile(Output):
+    """The contents of one nextnano output file, whatever its format.
 
-    The stored data contains coordinates (.coords) and dependent variables (.variables).
-    Each coordinate or variable would contain attributes like name, unit and value.
-    For more information, see their specific documentation.
-
-    The initialization of the class will execute the load method.
+    Picks the loader that matches the file, runs it on construction, and takes over
+    the `.Coord` and `.Variable` objects it produced. Naming the `product` is what
+    makes the choice unambiguous; without it a `.txt` file is loaded by trial, since
+    the products disagree only on that extension.
 
     Parameters
     ----------
     fullpath : str
-        path to the file.
+        Path to the file.
+    product : str, optional
+        ``'nextnano++'``, ``'nextnano3'``, ``'nextnano.NEGF'`` or ``'nextnano.MSB'``.
+        Left out, the loader is guessed from the file itself.
+    **loader_kwargs
+        Passed on to the loader.
 
     Attributes
     ----------
-    fullpath : str
-        path to the file (default: None)
-    coords : DictList
-        Coord objects (default: DictList())
-    variables : DictList
-        Variable objects (default: DictList())
-    data : DictList
-        coords and variables together
-    metadata : dict
-        extra information
-    filename : str
-        name with the file extension
-    filename_only
-        name without the file extension
-    extension : str
-        file extension
-    folder : str
-        folder of the fullpath
-    product : str
-        flag about nextnano product to help to find the best loading routine
+    product : str or None
+        The product passed in, unchanged.
 
-    Methods
-    -------
-    load(fullpath)
-        load a data file
-    get_coord(name)
-        equivalent to self.coords[name]
-    get_variable(name)
-        equivalent to self.variables[name]
+    Inherits every attribute of `.Output`: `fullpath`, `coords`, `variables`,
+    `metadata`, `data`, and the path properties.
+
+    Raises
+    ------
+    FileNotFoundError
+        If `fullpath` is not a file.
+    NotImplementedError
+        If no loader fits, which for a `.txt` file means the guess found nothing.
+
+    Notes
+    -----
+    Loading without a `product` warns, and the warning is worth heeding -- the guess
+    reads the file with one product's parser after another and keeps the first that
+    comes back with named variables, which is a heuristic, not a detection.
     """
 
     def __init__(self, fullpath, product=None, **loader_kwargs):
@@ -453,31 +445,6 @@ class DataFileTemplate(Output):
         self.update_with_datafile(df)
         del df
 
-    def update_with_datafile(self, datafile):
-        """
-        Copy .metadata, .coords and .variables of the specified datafile
-
-        Copy other attributes like .vtk if there is any.
-
-        Parameters
-        ----------
-        datafile : nextnano.outputs.DataFileTemplate object
-        """
-
-        self.metadata = datafile.metadata
-        self.coords = datafile.coords
-        self.variables = datafile.variables
-        if hasattr(datafile, "vtk"):
-            self.vtk = datafile.vtk
-
-    def get_loader(self):
-        pass
-
-    def export(self, filename, format):
-        raise NotImplementedError("Exporters are not implemented yet")
-
-
-class DataFile(DataFileTemplate):
     def get_loader(self):
         if self.product:
             resolve = defaults.get_DataFile_loader(self.product)
@@ -516,6 +483,26 @@ class DataFile(DataFileTemplate):
             f"Could not autodetect a loader for {self.fullpath}. "
             f"Specify the product: nextnano++ or nextnano3"
         )
+
+    def update_with_datafile(self, datafile):
+        """
+        Copy .metadata, .coords and .variables of the specified datafile
+
+        Copy other attributes like .vtk if there is any.
+
+        Parameters
+        ----------
+        datafile : nextnanopy.outputs.Output object
+        """
+
+        self.metadata = datafile.metadata
+        self.coords = datafile.coords
+        self.variables = datafile.variables
+        if hasattr(datafile, "vtk"):
+            self.vtk = datafile.vtk
+
+    def export(self, filename, format):
+        raise NotImplementedError("Exporters are not implemented yet")
 
     def plot(self, legend=False, y_axis_name="", subplots=False):
         import matplotlib.pyplot as plt
@@ -707,6 +694,12 @@ class DataFile(DataFileTemplate):
                 coordinates=self.coords, variables=self.variables, filename=filepath
             )
         self.filepath = filepath
+
+
+#: Kept for the imports written against the old two-class split. `DataFileTemplate`
+#: never had a second subclass, so it is `.DataFile` itself now.
+# can be deleted in major version update: 2.0.0
+DataFileTemplate = DataFile
 
 
 class AvsAscii(Output):
