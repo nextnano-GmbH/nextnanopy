@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 class DictList(OrderedDict):
     """
-    This is a customized collections.OrderedDict
+    Ordered dictionary whose values are also reachable by position.
 
     It is a mixture between a dictionary and a list because it allows to
     access the values via keys or integer indexes.
@@ -21,10 +21,12 @@ class DictList(OrderedDict):
             print(value)
         >>> 3
         >>> 't'
-
+    
+    Notes
+    -----
     Two deliberate deviations from normal Mapping semantics:
 
-    1. Iteration yields VALUES, not keys. This is the documented behaviour of this class and
+    1. Iteration yields **values**, not keys. This is the documented behaviour of this class and
        much of nextnanopy relies on it (e.g. ``for var in datafile.variables: var.name``).
        Note that dict/OrderedDict C-level fast paths bypass __iter__, so ``dict(d)``,
        ``d.update(other)``, ``key in d`` and ``**d`` keep their usual key-based behaviour.
