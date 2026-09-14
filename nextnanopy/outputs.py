@@ -394,28 +394,51 @@ class Output:
 class DataFile(Output):
     """The contents of one nextnano output file, whatever its format.
 
-    Picks the loader that matches the file, runs it on construction, and takes over
-    the `.Coord` and `.Variable` objects it produced. Naming the `product` is what
-    makes the choice unambiguous; without it a `.txt` file is loaded by trial, since
-    the products disagree only on that extension.
+    Picks the loader that matches the file, runs it on construction, and takes over the
+    `.Coord` and `.Variable` objects it produced together with its metadata. Only a
+    ``.txt`` file needs `product` to be named -- every other extension maps to the same
+    loader whichever product wrote it.
+
 
     Parameters
     ----------
-    fullpath : str
+    fullpath : str or pathlib.Path
         Path to the file.
-    product : str, optional
-        ``'nextnano++'``, ``'nextnano3'``, ``'nextnano.NEGF'`` or ``'nextnano.MSB'``.
-        Left out, the loader is guessed from the file itself.
+    product : str, default=None
+        Product that wrote the file: ``'nextnano++'``, ``'nextnano3'``,
+        ``'nextnano.NEGF'``, ``'nextnano.NEGF_classic'`` or ``'nextnano.MSB'``.
+        If omitted, a ``.txt`` file is loaded by trial and error; every other
+        extension resolves to its loader either way.
     **loader_kwargs
-        Passed on to the loader.
+        Passed to the loader.
+
 
     Attributes
     ----------
+    fullpath : str or pathlib.Path
+        Path to the file. Settable, and the path properties below follow it.
     product : str or None
         The product passed in, unchanged.
-
-    Inherits every attribute of `.Output`: `fullpath`, `coords`, `variables`,
-    `metadata`, `data`, and the path properties.
+    coords : DictList
+        `.Coord` objects, keyed by name.
+    variables : DictList
+        `.Variable` objects, keyed by name.
+    metadata : dict
+        Extra information recorded by the loader. What it holds depends on the
+        format, and the ``.vtr`` loader records none.
+    data : DictList
+        `coords` and `variables` in one mapping. Built afresh on every access, so
+        assigning into it changes nothing. Read-only.
+    folder : str
+        Folder holding the file. Read-only.
+    filename : str
+        File name with the extension. Read-only.
+    filename_only : str
+        File name without the extension. Read-only.
+    extension : str
+        File extension, leading dot included. Read-only.
+    vtk : pyvista.DataObject
+        The mesh as pyvista read it. Only a ``.vtr`` file has one.
 
     Raises
     ------
@@ -426,9 +449,15 @@ class DataFile(Output):
 
     Notes
     -----
-    Loading without a `product` warns, and the warning is worth heeding -- the guess
-    reads the file with one product's parser after another and keeps the first that
-    comes back with named variables, which is a heuristic, not a detection.
+    Only a ``.txt`` file warns when `product` is left out, and the warning is worth
+    heeding: the guess reads the file with one product's parser after another and
+    keeps the first that comes back with named variables, which is a heuristic, not
+    a detection. Every other extension resolves without warning.
+
+    The loader is chosen from the file name, never from the contents. The extension
+    picks the format (``.dat``, ``.vtr``, ``.fld`` etc), and for ``.txt`` the stem narrows it further (``variables_input``,
+    ``total_charges``). Both are the names nextnano writes by default, so renaming a
+    file loads it with the wrong parser, or raises if the new extension is unknown.
     """
 
     def __init__(self, fullpath, product=None, **loader_kwargs):
