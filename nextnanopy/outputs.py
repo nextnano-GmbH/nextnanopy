@@ -635,12 +635,11 @@ class DataFile(Output):
         ------
         NotImplementedError
             If the provided 'format' is not supported for saving.
-
-        Notes
-        -----
-        - For the 'dat' format, the DataFile instance should be one-dimensional (ndim=1).
-        - The 'VTKAscii' format requires 'nextnanopy.utils.formatting' module for creating the VTK header.
-        - The 'AvsAscii_one_file' format requires the 'write_avsascii_one_file' function.
+        ValueError
+            If 'dat' is asked for and the file has more than one coordinate.
+        KeyError
+            If 'dat' is asked for and the file was not loaded from a ``.dat``,
+            since only that loader records the headers this format writes back.
 
         Examples
         --------
