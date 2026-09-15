@@ -296,5 +296,76 @@ class TestExecuteOutputDirectory(unittest.TestCase):
         self.assertIn(f'--outputdirectory "{outputdirectory}"', self.info["cmd"])
 
 
+class TestExecuteWorkingDirectory(unittest.TestCase):
+    """execute() decides which directory the simulator process runs on.
+
+    Every path on the command line is absolute, so the working directory does not
+    decide where the output goes - only where the simulator's own cwd-relative files
+    land. It defaults to the input file's folder, keeping them with the user's files
+    instead of in the nextnano installation, and `wdir` overrides that.
+
+    As in TestExecuteOutputDirectory, send() and start_log() are patched out, so
+    nothing is launched; here send() is kept as a mock to read the cwd it was given.
+    """
+
+    def setUp(self):
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        self.root = Path(folder.name).resolve()
+        self.inputfile = self.root / "example.in"
+        self.inputfile.write_text("global{}\n")
+        self.send = unittest.mock.patch.object(commands, "send", return_value=None).start()
+        self.addCleanup(unittest.mock.patch.stopall)
+        unittest.mock.patch.object(commands, "start_log", return_value=(None, None, None)).start()
+
+    def execute(self, **kwargs):
+        """Run execute() on the temp input file and return the cwd send() was given."""
+        self.info = commands.execute(
+            inputfile=self.inputfile,
+            exe=sys.executable,
+            license="",
+            database="",
+            outputdirectory=self.root / "out",
+            show_log=False,
+            **kwargs,
+        )
+        return self.send.call_args.kwargs["cwd"]
+
+    def test_the_input_file_folder_is_the_default(self):
+        cwd = self.execute()
+
+        self.assertEqual(Path(cwd), self.root)
+        self.assertEqual(Path(self.info["wdir"]), self.root)
+
+    def test_wdir_overrides_it(self):
+        elsewhere = self.root / "elsewhere"
+        elsewhere.mkdir()
+
+        cwd = self.execute(wdir=elsewhere)
+
+        self.assertEqual(Path(cwd), elsewhere)
+        self.assertEqual(Path(self.info["wdir"]), elsewhere)
+
+    def test_wdir_does_not_move_the_output(self):
+        # the output directory follows outputdirectory, not the working directory
+        elsewhere = self.root / "elsewhere"
+        elsewhere.mkdir()
+
+        self.execute(wdir=elsewhere)
+
+        self.assertEqual(Path(self.info["outputdirectory"]), self.root / "out" / "example")
+
+    def test_a_missing_wdir_is_rejected(self):
+        # it is handed to Popen, which would fail on it anyway - but only after the
+        # output directory has been created and with a less obvious message
+        with self.assertRaises(NotADirectoryError):
+            self.execute(wdir=self.root / "not_there")
+        self.send.assert_not_called()
+
+    def test_a_file_is_not_a_working_directory(self):
+        with self.assertRaises(NotADirectoryError):
+            self.execute(wdir=self.inputfile)
+
+
 if __name__ == "__main__":
     unittest.main()

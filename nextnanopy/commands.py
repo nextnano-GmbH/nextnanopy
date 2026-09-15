@@ -106,15 +106,16 @@ def execute(
     parallel=False,
     overwrite=False,
     create_subdirectory=True,
+    wdir=None,
     **kwargs,
 ):
     """
     Run one input file and return a dict describing the started simulation.
 
     ``**kwargs`` are the simulator's own command line arguments and are passed on to
-    the product's command builder as they are. ``overwrite`` and
-    ``create_subdirectory`` are not among them: they only decide which directory the
-    simulation is started on, which is nextnanopy's own bookkeeping.
+    the product's command builder as they are. ``overwrite``,
+    ``create_subdirectory`` and ``wdir`` are not among them: they only decide which
+    directory the simulation is started on, which is nextnanopy's own bookkeeping.
 
     Parameters
     ----------
@@ -129,6 +130,21 @@ def execute(
         If True (default), the simulation writes into
         ``<outputdirectory>/<input file name>/``. If False, it writes into
         ``outputdirectory`` itself.
+    wdir : str or pathlib.Path, optional
+        Working directory of the simulator process. Defaults to the input file's
+        folder. Where the output goes is decided by
+        ``outputdirectory``, not by this - but any command line path that is relative
+        (a ``license`` or ``database`` configured as such) is resolved against it by
+        the simulator. Must be an existing directory.
+
+    Raises
+    ------
+    ValueError
+        If ``inputfile`` is empty or is not an existing file.
+    FileNotFoundError
+        If ``exe`` is not an existing file.
+    NotADirectoryError
+        If ``wdir`` is given and is not an existing directory.
     """
     # validate the input file
     if not str(inputfile):
@@ -141,7 +157,13 @@ def execute(
         raise FileNotFoundError(f"Executable path is invalid: '{exe}'\nCheck nextnanopy.config")
 
     exe = Path(exe)
-    wdir = inputfile.parent
+
+    if wdir is None:
+        wdir = inputfile.parent
+    else:
+        wdir = Path(wdir).resolve()
+        if not wdir.is_dir():
+            raise NotADirectoryError(f"Working directory is not an existing directory: {wdir}")
 
     filename = inputfile.stem
     if not create_subdirectory:

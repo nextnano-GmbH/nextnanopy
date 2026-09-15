@@ -359,6 +359,7 @@ class InputFileTemplate:
         convergence_check_mode="pause",
         overwrite=False,
         create_subdirectory=True,
+        wdir=None,
         **kwargs,
     ):
         """
@@ -397,6 +398,9 @@ class InputFileTemplate:
             If True, the simulation writes into
             `<outputdirectory>/<input file name>/`. If False, it writes into the
             `outputdirectory` itself.
+        wdir : str or pathlib.Path, optional
+            Working directory of the simulator process. Must be an existing
+            directory.
         **kwargs : dict
             The nextnano product's own command line arguments, passed on as they
             are. Anything not given here comes from `config`. `kwargs` may contain:
@@ -429,6 +433,8 @@ class InputFileTemplate:
             `convergence_check_mode` is not one of the values listed above.
         FileNotFoundError
             If the executable path in `config` is empty or invalid.
+        NotADirectoryError
+            If `wdir` is given and is not an existing directory.
         RuntimeError
             If `convergenceCheck` is True and the simulation was terminated or did
             not converge, unless `convergence_check_mode` is 'continue'.
@@ -442,10 +448,11 @@ class InputFileTemplate:
         itself. On Windows, calling `kill()`/`terminate()` on it stops only
         the shell wrapper; the running simulation is NOT stopped.
 
-        Where the output goes is decided by `overwrite`/`create_subdirectory`, which
-        are parameters rather than members of ``**kwargs``: they steer nextnanopy,
-        not the simulator, so they are also not config options. `folder_output`
-        holds the directory that was chosen once the run has started.
+        Where the output goes is decided by `overwrite`/`create_subdirectory`, and
+        where the simulator runs by `wdir`. All three are parameters rather than
+        members of ``**kwargs``: they steer nextnanopy, not the simulator, so they
+        are also not config options. `folder_output` holds the directory that was
+        chosen once the run has started.
         """
 
         cmd_kwargs = dict(self.default_command_args)
@@ -456,6 +463,7 @@ class InputFileTemplate:
             parallel=self.__parallel__,
             overwrite=overwrite,
             create_subdirectory=create_subdirectory,
+            wdir=wdir,
             **cmd_kwargs,
         )
         self.execute_info = info
