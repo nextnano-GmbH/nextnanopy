@@ -1,4 +1,3 @@
-import os
 import queue
 import subprocess
 import sys
@@ -138,18 +137,11 @@ def execute(
     if not inputfile.is_file():
         raise ValueError(f"Input file is not an existing file: {inputfile}")
 
+    if not Path(exe).is_file():
+        raise FileNotFoundError(f"Executable path is invalid: '{exe}'\nCheck nextnanopy.config")
+
     exe = Path(exe)
-    wdir, executable = (
-        exe.parent,
-        exe.name,
-    )  # nn3 assumes wdir at one folder upper than the executable
-
-    # validate configuration of executable path
-    if executable == "":
-        raise FileNotFoundError("Executable path is empty! Check nextnanopy.config")
-
-    if (not exe.is_file()) or (not wdir.is_dir()):
-        raise FileNotFoundError(f"Executable path is invalid: {exe}\nCheck nextnanopy.config")
+    wdir = inputfile.parent
 
     filename = inputfile.stem
     if not create_subdirectory:
@@ -162,10 +154,8 @@ def execute(
         outputdirectory = Path(mkdir_even_if_exists(outputdirectory, filename))
     logfile = outputdirectory / f"{filename}.log"
     cmd = command(inputfile, exe, license, database, outputdirectory, **kwargs)
-    cwd = os.getcwd()
     process = send(cmd, cwd=wdir)
     queue, tout, terr = start_log(process, logfile, show_log, parallel=parallel)
-    os.chdir(cwd)
     info = {
         "process": process,
         "outputdirectory": outputdirectory,
