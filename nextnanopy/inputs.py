@@ -1329,10 +1329,28 @@ class Sweep:
             output folder inside it. If False, the output folders are created
             directly in the output directory.
         **kwargs : dict
-            Forwarded to `InputFile.execute()` for every simulation.
-            `outputdirectory` is the exception: it is taken as the parent of the
-            sweep directory rather than passed on, and defaults to the
-            `outputdirectory` of `config`.
+            Forwarded to `InputFile.execute()` for every simulation. Its
+            `show_log`, `convergenceCheck`, `convergence_check_mode` and
+            `overwrite` are parameters of this method instead, so they never reach
+            `kwargs`. What is left of its signature is:
+
+            outputdirectory : str or pathlib.Path, optional
+                Where the sweep writes. The one argument that is not forwarded: it
+                is taken as the parent of the sweep directory, and every simulation
+                is then pointed at that directory rather than at this one. Defaults
+                to the `outputdirectory` of `config`.
+            create_subdirectory : bool, default=True
+                Forwarded as it is. Leave it True for a sweep: with False every
+                simulation writes into the output directory itself, so the sweep
+                points write over each other instead of getting the per-file
+                subfolder that keeps them apart.
+            wdir : str or pathlib.Path, optional
+                Working directory of every simulator process. Defaults per
+                simulation to the folder of the input file being run.
+
+            Anything else is a command line argument of the nextnano product
+            itself (`exe`, `license`, `database`, `threads`, ...) and is passed on
+            unchanged; see `InputFile.execute` for those.
 
         Raises
         ------
