@@ -88,6 +88,13 @@ class InputFileTemplate:
         Defaults to 'not valid' if the product is not recognised.
     config : NNConfig
         The configuration this file runs on, bound at construction (see Notes).
+    wdir : str or None
+        Directory the simulator process is started in by `execute()`. None (the
+        default) means the folder holding the input file, i.e. `folder_input`.
+        Set it to run the simulation somewhere else; `execute(wdir=...)` overrides
+        it for a single run. `save(temp=True)` sets it to the folder the file was
+        in before it was copied to the temporary one, so that moving the file to
+        temporary storage does not also move the directory the simulator runs in.
     execute_info : dict
         Information about the last execution. Empty until `execute()` has run.
 
@@ -123,6 +130,7 @@ class InputFileTemplate:
         self.fullpath = fullpath
         self.product = "not valid"
         self.parse = parse
+        self.wdir = None
         self.__parallel__ = False
         # `text` alone is enough to load: load_raw() only opens fullpath when text is
         # None, so a caller who already has the contents needs no file on disk. Without
@@ -305,7 +313,9 @@ class InputFileTemplate:
         temp : bool, default=False
             If True, save into a temporary folder that is removed when the process
             exits, keeping the current `filename`. Ignored with a warning when
-            `fullpath` is given.
+            `fullpath` is given. The folder the file was in is kept in the `wdir`
+            attribute, so `execute()` still runs the simulation there rather than
+            in the temporary folder.
         content : bool, default=False
             Experimental feature, refrain from using it.
             If True, save the parsed `content` attribute instead of `text`. Comments are
@@ -330,6 +340,14 @@ class InputFileTemplate:
             warnings.warn("Fullpath is specified, temp flag is ignored", stacklevel=2)
         if fullpath is None:
             if temp:
+                # The file moves to a scratch folder, but it still belongs where the
+                # user keeps it, so remember that folder for execute() to run in.
+                # Resolved now, both because a later chdir must not change what it
+                # means and because this is the last moment fullpath still points
+                # there. Already set means either a second temp save, whose fullpath
+                # is the temp folder by now, or a deliberate one by the caller.
+                if self.wdir is None and self.fullpath is not None:
+                    self.wdir = os.path.dirname(os.path.abspath(self.fullpath))
                 folder = self._get_temp_dir()
                 fullpath = os.path.join(folder, self.filename)
             elif self.fullpath is None:
@@ -400,7 +418,8 @@ class InputFileTemplate:
             `outputdirectory` itself.
         wdir : str or pathlib.Path, optional
             Working directory of the simulator process. Must be an existing
-            directory.
+            directory. Defaults to the `wdir` attribute, and to the folder of the
+            input file when that is None as well.
         **kwargs : dict
             The nextnano product's own command line arguments, passed on as they
             are. Anything not given here comes from `config`. `kwargs` may contain:
@@ -463,7 +482,7 @@ class InputFileTemplate:
             parallel=self.__parallel__,
             overwrite=overwrite,
             create_subdirectory=create_subdirectory,
-            wdir=wdir,
+            wdir=wdir if wdir is not None else self.wdir,
             **cmd_kwargs,
         )
         self.execute_info = info
@@ -1184,7 +1203,9 @@ class Sweep:
             (`example_0.in`, `example_1.in`, ...) instead of after the swept values.
         temp : bool, default=False
             If True, write the files into a temporary folder that is removed when
-            the process exits, instead of next to the input file.
+            the process exits, instead of next to the input file. The simulations
+            still run in the folder of the swept input file, not in the temporary
+            one: see the `wdir` attribute of `InputFile`.
         variables_comb_screen_fn : callable, default=None
             Filter for the combinations to generate. It is called with one
             combination of values at a time, in the order of the swept variables,
@@ -1212,6 +1233,13 @@ class Sweep:
             integer_only_in_name=integer_only_in_name,
             variables_comb_screen_fn=variables_comb_screen_fn,
         )
+
+        if temp:
+            # create_input_files() built these from the temp copy, so each of them
+            # would otherwise run in the temp folder. input_file kept the folder the
+            # swept file is in, which is where the sweep belongs.
+            for inputfile in self.input_files:
+                inputfile.wdir = input_file.wdir
 
     def save(self, *args, **kwargs):
         """

@@ -1640,6 +1640,96 @@ class TestExecuteOutputDirectoryParams(unittest.TestCase):
         self.assertNotIn("create_subdirectory", file.default_command_args)
 
 
+class TestTempSaveKeepsTheWorkingDirectory(unittest.TestCase):
+    """A file saved with temp=True still runs where the user keeps it.
+
+    execute() runs the simulator in the folder of the input file, so a temp copy
+    would otherwise run in the temporary folder: a different place on every run,
+    gone at interpreter exit, and nowhere near the files an input file may refer
+    to relatively. save(temp=True) therefore records the folder it came from in
+    .wdir, which execute() uses as its default.
+
+    commands.execute() is patched out; what it does with the value is covered by
+    TestExecuteWorkingDirectory in test_commands.py.
+    """
+
+    def setUp(self):
+        patch = unittest.mock.patch("nextnanopy.inputs.cmd_execute", return_value={})
+        self.cmd_execute = patch.start()
+        self.addCleanup(patch.stop)
+        self.origin = (folder_nnp).resolve()
+
+    def passed_wdir(self):
+        return self.cmd_execute.call_args.kwargs["wdir"]
+
+    def input_file(self):
+        return InputFile(folder_nnp / "only_variables.in")
+
+    def test_a_plain_file_has_none_and_follows_itself(self):
+        # None is what tells commands.execute() to use the input file's own folder
+        file = self.input_file()
+
+        self.assertIsNone(file.wdir)
+        file.execute()
+        self.assertIsNone(self.passed_wdir())
+
+    def test_a_temp_save_records_the_folder_it_came_from(self):
+        file = self.input_file()
+
+        file.save(temp=True, overwrite=True)
+
+        self.assertEqual(Path(file.wdir), self.origin)
+        # the file itself did move
+        self.assertNotEqual(Path(file.fullpath).parent, self.origin)
+        file.execute()
+        self.assertEqual(Path(self.passed_wdir()), self.origin)
+
+    def test_a_second_temp_save_keeps_the_original_folder(self):
+        # by then fullpath is in the temporary folder, which is not where it came from
+        file = self.input_file()
+
+        file.save(temp=True, overwrite=True)
+        file.save(temp=True, overwrite=True)
+
+        self.assertEqual(Path(file.wdir), self.origin)
+
+    def test_an_explicit_wdir_wins(self):
+        file = self.input_file()
+        file.save(temp=True, overwrite=True)
+
+        file.execute(wdir=folder_nn3)
+
+        self.assertEqual(self.passed_wdir(), folder_nn3)
+
+    def test_a_caller_set_wdir_survives_a_temp_save(self):
+        file = self.input_file()
+        file.wdir = folder_nn3
+
+        file.save(temp=True, overwrite=True)
+
+        self.assertEqual(file.wdir, folder_nn3)
+
+    def test_a_swept_file_runs_where_the_swept_input_file_is(self):
+        sweep = Sweep({"float": [1, 2]}, folder_nnp / "only_variables.in")
+
+        sweep.save_sweep(temp=True)
+
+        self.assertEqual(len(sweep.input_files), 2)
+        for file in sweep.input_files:
+            # written into the temporary folder, but pointed back at the original one
+            self.assertNotEqual(Path(file.fullpath).parent, self.origin)
+            self.assertEqual(Path(file.wdir), self.origin)
+
+    def test_a_sweep_without_temp_leaves_it_alone(self):
+        sweep = Sweep({"float": [1, 2]}, folder_nnp / "only_variables.in")
+        self.addCleanup(delete_files, "only_variables__", folder_nnp)
+
+        sweep.save_sweep()
+
+        for file in sweep.input_files:
+            self.assertIsNone(file.wdir)
+
+
 class TestSweepForwardsOverwrite(unittest.TestCase):
     """execute_sweep(overwrite=...) reaches the individual simulations.
 
