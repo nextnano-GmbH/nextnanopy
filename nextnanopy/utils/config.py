@@ -35,27 +35,6 @@ class Config:
     sections : list
         list of the section names
 
-    Methods
-    -------
-    preview()
-        print the text of the file.
-    load()
-        load the file located at .fullpath
-    save(fullpath=None)
-        save the current configuration into a file. (default is None)
-        If it is None, it will use the current .fullpath
-    get_options(section)
-        get the list of option names of a given section
-    config_to_configparser()
-        copy the information in .config to .configparser
-    set(section, option, value)
-        change the value of a given option of a section in .config
-        it applies the validator if there is any
-    get(section, option)
-        return the value of a given option of a section in .config
-    add_section(section)
-        create a new section in the configuration
-
     Raises
     ------
     ValueError
@@ -63,19 +42,8 @@ class Config:
 
     Notes
     -----
-    Known bug: a value containing a '%' can be loaded but never saved. Reads go through
-    the parser's raw store, so the '%' survives, but save() -> config_to_configparser()
-    assigns through configparser's default BasicInterpolation, which rejects a lone '%'::
-
-        config.set('nextnano++', 'outputdirectory', r'C:\\Users\\%USERNAME%\\out')
-        config.save()   # ValueError: invalid interpolation syntax ... at position 9
-
-    This bites real paths (%USERNAME%, %APPDATA%, an output folder named 50%_doping).
-    The fix is one argument -- build the parser as ConfigParser(interpolation=None); the
-    values here are filesystem paths, never templates, so interpolation buys nothing.
-    Left unfixed deliberately: no user has hit it. Apply the one argument if one ever
-    does, and stop there -- nothing else in this class needs to change.
-    See .local_dev/decisions_later.md for the full write-up.
+    A value must not contain a ``%``. One can be read from a file but not written back,
+    so `save` raises `ValueError` on it.
     """
 
     def __init__(self, fullpath, validators=None):
@@ -85,6 +53,16 @@ class Config:
             )
         if validators is None:
             validators = {}
+        # Known bug behind the '%' note in the class docstring, left unfixed
+        # deliberately: no user has hit it. The default BasicInterpolation rejects a
+        # lone '%', so r'C:\Users\%USERNAME%\out' loads fine -- reads come from the
+        # parser's raw store -- but save() -> config_to_configparser() assigns through
+        # the interpolation and raises ValueError. Real paths do hit it: %USERNAME%,
+        # %APPDATA%, an output folder named 50%_doping. The fix is one argument,
+        # ConfigParser(interpolation=None); these values are filesystem paths, never
+        # templates, so interpolation buys nothing. Apply it if a user ever complains
+        # and stop there, nothing else in this class needs to change.
+        # Full write-up in .local_dev/decisions_later.md.
         self.configparser = configparser.ConfigParser()
         self.validators = validators
         self.fullpath = fullpath
@@ -116,6 +94,7 @@ class Config:
         return self.config.keys()
 
     def preview(self):
+        """Print every section with its options and their values."""
         for sec in self.sections:
             print(f"[{sec}]")
             for key, value in self.config[sec].items():
@@ -123,10 +102,46 @@ class Config:
             print("")
 
     def get_options(self, section):
+        """Return the options of a section together with their values.
+
+        Parameters
+        ----------
+        section : str
+            Name of the section, a nextnano product for `.NNConfig`.
+
+        Returns
+        -------
+        dict
+            Value of each option, keyed by option name. The stored mapping itself and
+            not a copy, so editing it edits the configuration.
+
+        Raises
+        ------
+        KeyError
+            If there is no such section.
+        """
         options = self.config[section]
         return options
 
     def save(self, fullpath=None):
+        """Write the configuration to a file.
+
+        Parameters
+        ----------
+        fullpath : str or pathlib.Path, default=None
+            Where to write. If omitted the current `fullpath` is used; if given it
+            becomes the new `fullpath`.
+
+        Raises
+        ------
+        ValueError
+            If any value contains a ``%``. See the class Notes.
+
+        Notes
+        -----
+        The file is written beside the target and moved into place, so a reader never
+        meets a half-written file and a failure part way leaves the previous one intact.
+        """
         self.config_to_configparser()
         if fullpath is None:
             fullpath = self.fullpath
@@ -152,12 +167,53 @@ class Config:
                 self.configparser[sec][key] = str(value)
 
     def set(self, section, option, value):
+        """Change the value of an option.
+
+        Parameters
+        ----------
+        section : str
+            Name of the section, a nextnano product for `.NNConfig`.
+        option : str
+            Name of the option. One that the section does not already carry is added
+            rather than refused, so a misspelling passes unnoticed.
+        value : object
+            Value to store. The option's validator is applied first, so ``threads``
+            is kept as an `int` whatever is handed in.
+
+        Raises
+        ------
+        KeyError
+            If there is no such section.
+
+        Notes
+        -----
+        The change reaches this process only. `save` writes it to the file.
+        """
         if section in self.validators.keys():
             if option in self.validators[section].keys():
                 value = self.validators[section][option](value)
         self.config[section][option] = value
 
     def get(self, section, option):
+        """Return the value of an option.
+
+        Parameters
+        ----------
+        section : str
+            Name of the section, a nextnano product for `.NNConfig`.
+        option : str
+            Name of the option.
+
+        Returns
+        -------
+        object
+            The validated value: ``threads`` comes back as an `int`, the rest as `str`.
+
+        Raises
+        ------
+        KeyError
+            If there is no such section or option.
+        """
         return self.config[section][option]
 
     def add_section(self, section):

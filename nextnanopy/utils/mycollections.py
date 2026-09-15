@@ -21,7 +21,7 @@ class DictList(OrderedDict):
             print(value)
         >>> 3
         >>> 't'
-    
+
     Notes
     -----
     Two deliberate deviations from normal Mapping semantics:

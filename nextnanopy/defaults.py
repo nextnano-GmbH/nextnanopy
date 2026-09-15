@@ -204,6 +204,65 @@ def _get_config_default(product):
 
 
 class NNConfig(Config):
+    """The nextnano configuration: where each product sits and how it is to be run.
+
+    One section per nextnano product. A simulator's section holds ``exe``, ``license``,
+    ``database``, ``outputdirectory`` and whatever else that simulator takes, such as
+    ``threads``; ``nextnanoevo``/``nextnano_optimizers`` is not a simulator and holds ``license`` alone. Use
+    `get_options` to see what a given section actually carries.
+
+    `nextnanopy.config` is the instance the whole process shares and the one to reach
+    for; an `.InputFile` takes a copy of it when it is built, or reads a file of its own
+    when given `configpath`.
+
+    Parameters
+    ----------
+    fullpath : str or pathlib.Path, default=None
+        Path to the configuration file. If omitted, ``.nextnanopy-config`` in the home
+        directory is used.
+
+    Attributes
+    ----------
+    fullpath : str or pathlib.Path
+        Path to the configuration file. Passing a path to `save` repoints it.
+    config : dict
+        Validated value of every option, keyed by section and then by option.
+    sections : dict_keys
+        Names of the sections, one per product. Read-only.
+    defaults : dict
+        Value every option falls back to, shaped like `config`.
+    default_fullpath : pathlib.Path
+        Path used when none is given: ``.nextnanopy-config`` in the home directory.
+    validators : dict
+        Callable applied to an option as it is read, keyed like `config`. Only
+        ``threads`` has one, `int`.
+    configparser : configparser.ConfigParser
+        The raw string values behind `config`.
+
+    Notes
+    -----
+    Reading the file is not a read-only act. A file that is missing is written with the
+    defaults.
+
+    Examples
+    --------
+    >>> import nextnanopy
+    >>> config = nextnanopy.config
+    >>> config.get('nextnano++', 'threads')
+    0
+
+    A value that is only set reaches every input file built after it, and is forgotten
+    when the process ends:
+
+    >>> config.set('nextnano++', 'threads', 4)
+    >>> config.get('nextnano++', 'threads')
+    4
+
+    Saving writes it to `fullpath`, so later processes start from it as well:
+
+    >>> config.save()
+    """
+
     def __init__(self, fullpath=None):
         self.default_fullpath = config_default_path
         validators = get_config_validators()
@@ -230,6 +289,12 @@ class NNConfig(Config):
             )
 
     def to_default(self):
+        """Put every option back to the value nextnanopy ships.
+
+        Reaches this process only; `save` writes it to the file, and `reset` does both.
+        A section the defaults do not name, such as a product this version no longer
+        knows, is left as it stands.
+        """
         for section in self.defaults.keys():
             if section not in self.sections:
                 self.add_section(section)
@@ -237,6 +302,11 @@ class NNConfig(Config):
                 self.set(section, option, value)
 
     def reset(self):
+        """Put every option back to the value nextnanopy ships and write the file.
+
+        `to_default` followed by `save`, so the configuration on disk is overwritten
+        and the paths set there are gone.
+        """
         self.to_default()
         self.save()
 
@@ -279,10 +349,11 @@ def get_config():
     access instead.
 
     This is the configuration new input files start from: with no ``configpath``,
-    InputFileTemplate.__init__ takes a copy of it. It lives here rather than in
-    nextnanopy/__init__.py, where it used to, because nextnanopy.inputs has to reach
-    it and cannot import the package root -- the package root imports nextnanopy.inputs.
+    InputFileTemplate.__init__ takes a copy of it.
     """
+    # It lives here rather than in nextnanopy/__init__.py, where it used to,
+    # because nextnanopy.inputs has to reach
+    # it and cannot import the package root -- the package root imports nextnanopy.inputs.
     global _config
     if _config is None:
         _config = NNConfig()
