@@ -1,10 +1,10 @@
+import platform
 import queue
 import subprocess
 import sys
 import threading
 import warnings
 from pathlib import Path
-import platform
 
 from nextnanopy import defaults
 from nextnanopy.utils.formatting import generate_command
