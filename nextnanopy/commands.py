@@ -1,3 +1,4 @@
+import platform
 import queue
 import subprocess
 import sys
@@ -29,21 +30,22 @@ def command(
     product = defaults.input_file_type(inputfile)
     cmd = defaults.get_command(product)
 
-    # warn if output path might be too long
-    outdir_len = len(str(outputdirectory))
-    tooLongPath = (
-        (product in ["nextnano3", "nextnano++"]) and outdir_len + 80 > 260
-    )  # TODO: how long is the minimal path appended by nn3/nnp simulations?
-    tooLongPathNEGF = (
-        product in ["nextnano.NEGF", "nextnano.NEGF_classic"]
-    ) and outdir_len + 80 > 260
-    if tooLongPath or tooLongPathNEGF:
-        # stacklevel=4 blames the caller of InputFile.execute(), the usual route here:
-        # command() <- execute() <- InputFile.execute() <- user.
-        warnings.warn(
-            "The output path might be too long on Windows 10 (maximum 260 characters). Consider abbreviating your input file name and/or sweep variables...",
-            stacklevel=4,
-        )
+    if platform.system() == 'Windows':
+        # warn if output path might be too long
+        outdir_len = len(str(outputdirectory))
+        tooLongPath = (
+            (product in ["nextnano3", "nextnano++"]) and outdir_len + 80 > 260
+        )  # TODO: how long is the minimal path appended by nn3/nnp simulations?
+        tooLongPathNEGF = (
+            product in ["nextnano.NEGF", "nextnano.NEGF_classic"]
+        ) and outdir_len + 80 > 260
+        if tooLongPath or tooLongPathNEGF:
+            # stacklevel=4 blames the caller of InputFile.execute(), the usual route here:
+            # command() <- execute() <- InputFile.execute() <- user.
+            warnings.warn(
+                "The output path might be too long on Windows 10 (maximum 260 characters). Consider abbreviating your input file name and/or sweep variables...",
+                stacklevel=4,
+            )
     return cmd(**kwargs)
 
 
