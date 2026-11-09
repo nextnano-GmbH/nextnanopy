@@ -284,15 +284,15 @@ class NNConfig(Config):
             # sentence asserts that a nextnanoevo section is present and tells the user to
             # act on it, so it is only added when one actually is.
             nnopti_note = (
-                "Your nextnanoevo section still holds its 'license' path: move that value into the 'nextnano optimizers' section before removing it. "
+                "If your nextnanoevo section still holds a 'license' path, move that value into the 'nextnano optimizers' section before removing it. "
                 if "nextnanoevo" in unsupported_products
                 else ""
             )
             # stacklevel=1: fires at import time; the warning is about the config file's
             # contents, not any call site, so no caller frame is actionable.
             warnings.warn(
-                f"Unsupported products in config file: {unsupported_products} will be ignored. To not see this message, please remove unsupported products from the config file: {self.fullpath}. "
-                "Note: nextnano.NEGF++ was renamed to nextnano.NEGF, nextnano.NEGF was renamed to nextnano.NEGF_classic, and nextnanoevo was renamed to 'nextnano optimizers'. "
+                f"Unsupported products in config file: {unsupported_products} will be ignored. To not see this message, please remove unsupported products from the config file: {self.fullpath}. \n"
+                "Note: nextnano.NEGF++ was renamed to nextnano.NEGF, nextnano.NEGF was renamed to nextnano.NEGF_classic, and nextnanoevo was renamed to 'nextnano optimizers'. \n"
                 f"{nnopti_note}"
                 "Please check the documentation for more details.",
                 stacklevel=1,
