@@ -16,7 +16,7 @@ from nextnanopy.negf import outputs as negf_outputs
 from nextnanopy.nn3 import defaults as nn3_defaults
 from nextnanopy.nn3 import inputs as nn3_inputs
 from nextnanopy.nn3 import outputs as nn3_outputs
-from nextnanopy.nnevo import defaults as nnevo_defaults
+from nextnanopy.nnopti import defaults as nnopti_defaults
 from nextnanopy.nnp import defaults as nnp_defaults
 from nextnanopy.nnp import inputs as nnp_inputs
 from nextnanopy.nnp import outputs as nnp_outputs
@@ -239,16 +239,16 @@ DISPATCH_MATRIX = {
         "config_validator": msb_defaults.config_validator,
         "config_default": msb_defaults.config_default,
     },
-    # nextnanoevo is the shape that makes the matrix worth writing down: it is a real
-    # product with real config, but it has no input-file format at all, so four of its
-    # six cells are rejections and only the config pair resolves.
-    "nextnanoevo": {
+    # nextnano optimizers is the shape that makes the matrix worth writing down: it is a
+    # real product with real config, but it has no input-file format at all, so four of
+    # its six cells are rejections and only the config pair resolves.
+    "nextnano optimizers": {
         "InputFile": RAISES,
         "DataFile_loader": RAISES,
         "command": RAISES,
         "fmt": RAISES,
-        "config_validator": nnevo_defaults.config_validator,
-        "config_default": nnevo_defaults.config_default,
+        "config_validator": nnopti_defaults.config_validator,
+        "config_default": nnopti_defaults.config_default,
     },
 }
 

@@ -5,9 +5,12 @@
 # --- nextnano products, tools and file formats ---
 nextnano
 nextnanopy
+# nextnanoevo/nnevo are the former names of nextnano optimizers/nnopti; both are still
+# named by the config warning in defaults.py and the README release note.
 nextnanoevo
 nextnanomat
 nnevo
+nnopti
 nnpp
 nnconfig
 negf

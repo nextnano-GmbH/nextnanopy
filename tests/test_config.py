@@ -68,23 +68,23 @@ class Test_NNConfig(unittest.TestCase):
         self.assertTrue("threads" in config.validators["nextnano.NEGF"].keys())
         self.assertTrue(Path(config.fullpath).is_file())
 
-    def test_default_nnevo(self):
+    def test_default_nnopti(self):
         config = NNConfig()
         self.assertEqual(Path(config.fullpath), default_config_path)
-        self.assertTrue("nextnanoevo" in config.validators.keys())
-        self.assertTrue("nextnanoevo" in config.defaults.keys())
-        self.assertTrue("nextnanoevo" in config.config.keys())
+        self.assertTrue("nextnano optimizers" in config.validators.keys())
+        self.assertTrue("nextnano optimizers" in config.defaults.keys())
+        self.assertTrue("nextnano optimizers" in config.config.keys())
         options = ["license"]
         for option in options:
-            self.assertTrue(option in config.defaults["nextnanoevo"].keys())
-            self.assertTrue(option in config.config["nextnanoevo"].keys())
-        # nnevo has no option needing type conversion, so its validator dict is empty;
+            self.assertTrue(option in config.defaults["nextnano optimizers"].keys())
+            self.assertTrue(option in config.config["nextnano optimizers"].keys())
+        # nnopti has no option needing type conversion, so its validator dict is empty;
         # 'license' is a path kept verbatim.
-        self.assertFalse("license" in config.validators["nextnanoevo"].keys())
-        option = "exe"  # no exe for nnevo
-        self.assertFalse(option in config.validators["nextnanoevo"].keys())
-        self.assertFalse(option in config.defaults["nextnanoevo"].keys())
-        self.assertFalse(option in config.config["nextnanoevo"].keys())
+        self.assertFalse("license" in config.validators["nextnano optimizers"].keys())
+        option = "exe"  # no exe for nnopti
+        self.assertFalse(option in config.validators["nextnano optimizers"].keys())
+        self.assertFalse(option in config.defaults["nextnano optimizers"].keys())
+        self.assertFalse(option in config.config["nextnano optimizers"].keys())
         self.assertTrue(Path(config.fullpath).is_file())
 
     def test_load_nn3(self):
@@ -204,7 +204,7 @@ class Test_NNConfig(unittest.TestCase):
         unsupported_products = set(config.get_unsupported_products())
         self.assertEqual(
             unsupported_products,
-            {"nextnano.NEGF++", "nextnano_nonexistent"},
+            {"nextnano.NEGF++", "nextnano_nonexistent", "nextnanoevo"},
         )
 
 

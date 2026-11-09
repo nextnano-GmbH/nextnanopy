@@ -48,3 +48,11 @@ Do you want to help nextnanopy? Please send an email to [python@nextnano.com](ma
 Release notes for all published versions are in the [nextnanopy documentation](https://www.nextnano.com/docu/nextnanopy/release_notes/index.html). The section below tracks changes for the next, not-yet-released version; on release, these entries move to the documentation.
 
 ## Unreleased changes
+
+- the `nextnanoevo` product was renamed to `nextnano optimizers`, and its subpackage
+  `nextnanopy/nnevo/` to `nextnanopy/nnopti/`. This is a breaking change: the
+  configuration section is now `[nextnano optimizers]`, so `config.get('nextnanoevo', ...)`
+  and `config.set('nextnanoevo', ...)` raise `KeyError`, and an existing `[nextnanoevo]`
+  section in `~/.nextnanopy-config` is reported as an unsupported product and ignored.
+  Nothing is lost: your `license` path stays in the file. Move that value into the new
+  `[nextnano optimizers]` section, then remove the `[nextnanoevo]` section.

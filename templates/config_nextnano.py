@@ -37,7 +37,7 @@ nn.config.set('nextnano++'   , 'license', os.path.join(path_license, r'License_n
 nn.config.set('nextnano3'    , 'license', os.path.join(path_license, r'License_nnp.lic'))
 nn.config.set('nextnano.MSB' , 'license', os.path.join(path_license, r'License_nnp.lic'))
 nn.config.set('nextnano.NEGF', 'license', os.path.join(path_license, r'License_nnNEGF.lic'))
-nn.config.set('nextnanoevo', 'license',   os.path.join(path_license, r'License_nnevo.lic'))
+nn.config.set('nextnano optimizers', 'license', os.path.join(path_license, r'License_nnopti.lic'))
 
 #----------------------------------------------------------
 # Location of nextnano++ files:    executable and database

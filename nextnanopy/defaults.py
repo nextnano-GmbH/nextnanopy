@@ -14,7 +14,7 @@ from nextnanopy.negf import outputs as _negf_outputs
 from nextnanopy.nn3 import defaults as _nn3
 from nextnanopy.nn3 import inputs as _nn3_inputs
 from nextnanopy.nn3 import outputs as _nn3_outputs
-from nextnanopy.nnevo import defaults as _nnevo
+from nextnanopy.nnopti import defaults as _nnopti
 from nextnanopy.nnp import defaults as _nnp
 from nextnanopy.nnp import inputs as _nnp_inputs
 from nextnanopy.nnp import outputs as _nnp_outputs
@@ -33,7 +33,7 @@ class ProductSpec:
     """
     Everything nextnanopy knows about one nextnano product.
 
-    A product need not support every part of the package. nextnanoevo has configuration
+    A product need not support every part of the package. nextnano optimizers has configuration
     but no input-file format at all, so its fmt/command/detect/InputFile/get_loader are
     None and the matching getters reject it. ``None`` therefore means "this product has no
     such thing", and the getters turn that into the ValueError they always raised.
@@ -118,12 +118,12 @@ PRODUCTS: dict[str, ProductSpec] = {
         InputFile=_msb_inputs.InputFile,
         get_loader=_msb_outputs.get_loader,
     ),
-    # Configuration only: nextnanoevo has no input-file format, so it is not detectable
-    # and has no fmt, command, InputFile or loader.
-    "nextnanoevo": ProductSpec(
-        name="nextnanoevo",
-        config_default=_nnevo.config_default,
-        config_validator=_nnevo.config_validator,
+    # Configuration only: nextnano optimizers has no input-file format, so it is not
+    # detectable and has no fmt, command, InputFile or loader.
+    "nextnano optimizers": ProductSpec(
+        name="nextnano optimizers",
+        config_default=_nnopti.config_default,
+        config_validator=_nnopti.config_validator,
     ),
 }
 
@@ -208,8 +208,8 @@ class NNConfig(Config):
 
     One section per nextnano product. A simulator's section holds ``exe``, ``license``,
     ``database``, ``outputdirectory`` and whatever else that simulator takes, such as
-    ``threads``; ``nextnanoevo``/``nextnano_optimizers`` is not a simulator and holds ``license`` alone. Use
-    `get_options` to see what a given section actually carries.
+    ``threads``; ``nextnano optimizers`` is not a simulator and holds ``license`` alone.
+    Use `get_options` to see what a given section actually carries.
 
     `nextnanopy.config` is the instance the whole process shares and the one to reach
     for; an `.InputFile` takes a copy of it when it is built, or reads a file of its own
@@ -280,11 +280,21 @@ class NNConfig(Config):
 
         unsupported_products = self.get_unsupported_products()
         if unsupported_products:
+            # Unlike the rename list, which holds whatever the file contains, this
+            # sentence asserts that a nextnanoevo section is present and tells the user to
+            # act on it, so it is only added when one actually is.
+            nnopti_note = (
+                "Your nextnanoevo section still holds its 'license' path: move that value into the 'nextnano optimizers' section before removing it. "
+                if "nextnanoevo" in unsupported_products
+                else ""
+            )
             # stacklevel=1: fires at import time; the warning is about the config file's
             # contents, not any call site, so no caller frame is actionable.
             warnings.warn(
                 f"Unsupported products in config file: {unsupported_products} will be ignored. To not see this message, please remove unsupported products from the config file: {self.fullpath}. "
-                "Note: nextnano.NEGF++ was renamed to nextnano.NEGF, nextnano.NEGF was renamed to nextnano.NEGF_classic. Please check the documentation for more details.",
+                "Note: nextnano.NEGF++ was renamed to nextnano.NEGF, nextnano.NEGF was renamed to nextnano.NEGF_classic, and nextnanoevo was renamed to 'nextnano optimizers'. "
+                f"{nnopti_note}"
+                "Please check the documentation for more details.",
                 stacklevel=1,
             )
 
