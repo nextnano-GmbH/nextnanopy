@@ -41,6 +41,9 @@ all = ["nextnanopy[plot,gds,post]"]
 # Development: everything optional plus the test runner and linter.
 dev = ["nextnanopy[all]", "pytest>=7.0", "ruff>=0.15"]
 
+[project.scripts]
+nextnanopy-config = "nextnanopy.utils.config_cli:main"
+
 [project.urls]
 Homepage = "https://github.com/nextnano-GmbH/nextnanopy"
 

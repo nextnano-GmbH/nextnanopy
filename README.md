@@ -48,3 +48,5 @@ Do you want to help nextnanopy? Please send an email to [python@nextnano.com](ma
 Release notes for all published versions are in the [nextnanopy documentation](https://www.nextnano.com/docu/nextnanopy/release_notes/index.html). The section below tracks changes for the next, not-yet-released version; on release, these entries move to the documentation.
 
 ## Unreleased changes
+
+- new `nextnanopy-config` command: it creates `~/.nextnanopy-config` with the default values if it does not exist yet and prints where it is, so setting up a fresh install no longer requires writing Python first. `--show` prints every section with its values, `--reset` puts every option back to the shipped defaults. Creating the file on first use of `nextnanopy.config` is unchanged; the command only makes it an explicit step.

@@ -4,14 +4,47 @@ import sys
 import tempfile
 import unittest
 import warnings
+from importlib import metadata
 from pathlib import Path
 from unittest import mock
 
 import nextnanopy
-from nextnanopy.defaults import NNConfig
+from nextnanopy.defaults import NNConfig, products
 from nextnanopy.utils.config import Config
 
 default_config_path = Path.home() / ".nextnanopy-config"
+
+
+def _run_in_home(args, home):
+    """Run the interpreter with `args` in a subprocess whose home directory is `home`.
+
+    Returns the completed process and the names of the files `home` holds afterwards.
+    """
+    env = dict(os.environ, HOME=home, USERPROFILE=home)
+    proc = subprocess.run(
+        [sys.executable, *args],
+        env=env,
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).parent.parent,
+    )
+    return proc, sorted(p.name for p in Path(home).iterdir())
+
+
+def _run_in_fake_home(args):
+    """Run the interpreter with `args` in a subprocess whose home is an empty temp folder.
+
+    A fresh interpreter is the only honest way to test import-time behaviour, and a fake
+    home is the only way to see the first-run bootstrap: this machine already has a
+    ~/.nextnanopy-config, which is the case that does NOT write.
+    """
+    with tempfile.TemporaryDirectory() as home:
+        return _run_in_home(args, home)
+
+
+# The body of the console script pip generates from the entry point, as source to hand to
+# `python -c`: the wrapper is nothing more than this call.
+_CLI_SOURCE = "import sys\nfrom nextnanopy.utils.config_cli import main\nsys.exit(main())\n"
 
 
 class Test_NNConfig(unittest.TestCase):
@@ -210,24 +243,9 @@ class Test_NNConfig(unittest.TestCase):
 
 class Test_LazyConfig(unittest.TestCase):
     def _run_in_fake_home(self, code):
-        """Run code in a subprocess whose home directory is an empty temp folder.
-
-        A fresh interpreter is the only honest way to test import-time behaviour, and
-        a fake home is the only way to see the first-run bootstrap: this machine
-        already has a ~/.nextnanopy-config, which is the case that does NOT write.
-        """
-        with tempfile.TemporaryDirectory() as home:
-            env = dict(os.environ, HOME=home, USERPROFILE=home)
-            proc = subprocess.run(
-                [sys.executable, "-c", code],
-                env=env,
-                capture_output=True,
-                text=True,
-                cwd=Path(__file__).parent.parent,
-            )
-            self.assertEqual(proc.returncode, 0, proc.stderr)
-            created = [p.name for p in Path(home).iterdir()]
-            return proc.stdout.strip(), created
+        proc, created = _run_in_fake_home(["-c", code])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        return proc.stdout.strip(), created
 
     def test_import_does_not_create_config_file(self):
         stdout, created = self._run_in_fake_home("import nextnanopy; print('imported')")
@@ -271,6 +289,88 @@ class Test_LazyConfig(unittest.TestCase):
         # the trailing raise, every unknown name would silently evaluate to None.
         with self.assertRaises(AttributeError):
             _ = nextnanopy.does_not_exist
+
+
+class Test_CLI(unittest.TestCase):
+    """Tests for the nextnanopy-config command.
+
+    The command is run in a subprocess with a fake home, so the real
+    ~/.nextnanopy-config of the machine running the tests is never read or written.
+    """
+
+    def _run_cli(self, *args, home=None):
+        """Run the command in a subprocess whose home directory is `home`.
+
+        An empty temp folder is used when `home` is omitted. The command is driven
+        through its entry-point function rather than the installed `nextnanopy-config`
+        wrapper, so that the tests hold for a source checkout as well; that the wrapper
+        points at that function is what test_console_script_is_declared asserts.
+        """
+        argv = ["-c", _CLI_SOURCE, *args]
+        if home is None:
+            return _run_in_fake_home(argv)
+        return _run_in_home(argv, home)
+
+    def _configure(self, home, value):
+        """Set nextnano++ `exe` to `value` in the config file of `home` and save it."""
+        fullpath = Path(home) / ".nextnanopy-config"
+        config = NNConfig(fullpath)
+        config.set("nextnano++", "exe", value)
+        config.save()
+        return fullpath
+
+    def test_creates_config_file_in_empty_home(self):
+        proc, created = self._run_cli()
+
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(created, [".nextnanopy-config"])
+        # The path is the first line on its own, so a script can read it with `head -1`.
+        first_line = proc.stdout.splitlines()[0]
+        self.assertEqual(Path(first_line).name, ".nextnanopy-config")
+
+    def test_second_run_keeps_the_configured_paths(self):
+        with tempfile.TemporaryDirectory() as home:
+            proc, _ = self._run_cli(home=home)
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            fullpath = self._configure(home, "some_path")
+
+            proc, _ = self._run_cli(home=home)
+
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            self.assertEqual(NNConfig(fullpath).get("nextnano++", "exe"), "some_path")
+
+    def test_reset_restores_the_defaults(self):
+        with tempfile.TemporaryDirectory() as home:
+            proc, _ = self._run_cli(home=home)
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            fullpath = self._configure(home, "some_path")
+
+            proc, _ = self._run_cli("--reset", home=home)
+
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            self.assertEqual(NNConfig(fullpath).get("nextnano++", "exe"), "")
+
+    def test_show_prints_every_product_section(self):
+        proc, _ = self._run_cli("--show")
+
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        for product in products:
+            self.assertIn(f"[{product}]", proc.stdout)
+
+    def test_console_script_is_declared(self):
+        # The entry point is the whole reason `nextnanopy-config` exists as a command.
+        # Nothing else fails if it is dropped from pyproject.toml: the package still
+        # imports and `python -m nextnanopy` still works.
+        try:
+            dist = metadata.distribution("nextnanopy")
+        except metadata.PackageNotFoundError:
+            self.skipTest("nextnanopy is not installed, so there is no metadata to read")
+        scripts = {ep.name: ep.value for ep in dist.entry_points if ep.group == "console_scripts"}
+        self.assertEqual(
+            scripts.get("nextnanopy-config"),
+            "nextnanopy.utils.config_cli:main",
+            "console script metadata is missing or stale; reinstall with `pip install -e .`",
+        )
 
 
 class Test_Config(unittest.TestCase):
