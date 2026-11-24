@@ -77,3 +77,7 @@ def main(argv=None):
         print()
         config.preview()
     return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

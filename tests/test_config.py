@@ -357,6 +357,16 @@ class Test_CLI(unittest.TestCase):
         for product in products:
             self.assertIn(f"[{product}]", proc.stdout)
 
+    def test_module_invocation_runs_main(self):
+        # `python -m nextnanopy.utils.config_cli` is a PATH-independent way to reach the
+        # command, so the module runs main() when executed as __main__.
+        proc, created = _run_in_fake_home(["-m", "nextnanopy.utils.config_cli"])
+
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(created, [".nextnanopy-config"])
+        first_line = proc.stdout.splitlines()[0]
+        self.assertEqual(Path(first_line).name, ".nextnanopy-config")
+
     def test_console_script_is_declared(self):
         # The entry point is the whole reason `nextnanopy-config` exists as a command.
         # Nothing else fails if it is dropped from pyproject.toml: the package still
